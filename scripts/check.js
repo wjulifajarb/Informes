@@ -1,0 +1,1 @@
+const fs=require('node:fs'),vm=require('node:vm');new vm.Script(fs.readFileSync('apps-script/Code.gs','utf8'));new vm.Script(fs.readFileSync('public/index.html','utf8').split('<script>')[1].split('</script>')[0]);console.log('Sintaxis válida: Apps Script y JavaScript del navegador.');
