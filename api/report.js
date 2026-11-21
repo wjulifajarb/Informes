@@ -27,6 +27,33 @@ function layout(payload){
  function motivation(page){const items=page.bars||[];if(!items.length){note(page,page.note||'Sin respuestas válidas.');return;}const total=items.reduce((a,b)=>a+Number(b[1]||0),0);const rows=items.map(b=>[b[0],b[1],clean(b[2]??'').split(' · ').at(-1)||'N/D']);const left=580,right=CW-left-18;const res=panelTable(['Aspecto','Respuestas','%'],rows,L,y+12,left,B-50,'Aspectos valorados por los participantes',[3.4,1.05,0.85],14);const first=items[0],top=items.reduce((a,b)=>Number(b[1])>Number(a[1])?b:a,first);const pc=total?`${(100*Number(top[1])/total).toLocaleString('es-CO',{maximumFractionDigits:1})}%`:'N/D';let cardH=340;callout(L+left+18,y,right,cardH,'ASPECTO MÁS VALORADO',pc,top[0]);y=Math.max(y+cardH,res.end)+20;if(res.remaining.length){continuation(page);tableFlow(page,['Aspecto','Respuestas','%'],res.remaining,[3,1,1]);}note(page,page.note);}
  function funnel(page){const b=page.bars||[];if(!b.length)return;const ww=420,other=CW-ww-20,top=y;let cy=y+12;const max=Math.max(1,Number(b[0]?.[1])||1);b.forEach((v,i)=>{const w=Math.max(ww*.56,ww*(1-i*.13)),x=L+(ww-w)/2;p.rect(x,cy,w,66,i===0?Y:i===b.length-1?BLACK:PALE);const col=i===b.length-1?WHITE:BLACK;p.txt(String(v[1]),x+10,cy+7,w-20,24,col,true,'center');p.txt(v[0],x+12,cy+36,w-24,12,col,true,'center');cy+=77;});const right=panelTable(page.headers||['Estado','Cantidad'],page.rows||[],L+ww+20,top,other,B-32,'Otros estados',[3,1],12.5);y=Math.max(cy,right.end)+12;if(right.remaining.length){continuation(page);tableFlow(page,page.headers,right.remaining,[3,1]);}note(page,page.note);}
  function financial(page){const rows=page.rows||[],call=rows.find(r=>/donaci[oó]n (requerida|preliminar parcial)/i.test(clean(r[0])))||rows.find(r=>/saldo neto disponible/i.test(clean(r[0])));if(!call||rows.length>13||page.headers?.length!==2){tableFlow(page,page.headers,rows,page.widths);note(page,page.note);return;}const left=560,right=CW-left-18;const res=panelTable(page.headers,rows,L,y+8,left,B-45,'',[3,1.4],13.5);callout(L+left+18,y,right,Math.min(385,B-y-25),clean(call[0]).toUpperCase(),call[1],/donaci/i.test(call[0])?'Proyección financiera':'Corte y saldo sujetos a validación');y=Math.max(res.end,y+Math.min(385,B-y-25))+17;if(res.remaining.length){continuation(page);tableFlow(page,page.headers,res.remaining,[3,1]);}note(page,page.note);}
+ // V4.1: paneles financieros fieles al modelo de hoja (dos tablas enfrentadas).
+ function financialComparison(page){
+   const gap=20, ww=(CW-gap)/2, sy=y;
+   const left=panelTable(page.leftHeaders,page.leftRows,L,sy,ww,B-70,page.leftTitle,[2.6,1.15],12.5);
+   const right=panelTable(page.rightHeaders,page.rightRows,L+ww+gap,sy,ww,B-70,page.rightTitle,[2.6,1.15],12.5);
+   y=Math.max(left.end,right.end)+16;
+   if(left.remaining.length){continuation(page);p.txt('Proyección base · continuación',L,y,CW,16,BLACK,true);y+=26;tableFlow(page,page.leftHeaders,left.remaining,[2.6,1.15]);}
+   if(right.remaining.length){continuation(page);p.txt('Simulación empresa · continuación',L,y,CW,16,BLACK,true);y+=26;tableFlow(page,page.rightHeaders,right.remaining,[2.6,1.15]);}
+   note(page,page.note);
+ }
+ function financialPortfolio(page){
+   const gap=22, ww=(CW-gap)/2, sy=y;
+   const left=panelTable(page.leftHeaders,page.leftRows,L,sy,ww,B-70,page.leftTitle,[2.8,1.2],12.4);
+   const right=panelTable(page.rightHeaders,page.rightRows,L+ww+gap,sy,ww,B-70,page.rightTitle,[2.8,1.2],12.4);
+   y=Math.max(left.end,right.end)+16;
+   if(left.remaining.length){continuation(page);tableFlow(page,page.leftHeaders,left.remaining,[2.8,1.2]);}
+   if(right.remaining.length){continuation(page);tableFlow(page,page.rightHeaders,right.remaining,[2.8,1.2]);}
+   note(page,page.note);
+ }
+ function financialFundSummary(page){
+   const lw=615,gap=20,rw=CW-lw-gap,sy=y;
+   const table=panelTable(page.headers,page.rows,L,sy,lw,B-75,'Movimientos del fondo 2026-II',[3,1.25],12.5);
+   callout(L+lw+gap,sy,rw,335,page.highlightLabel||'FONDO DISPONIBLE',page.highlightValue||'Pendiente',page.highlightText||'Cifras pendientes de validación');
+   y=Math.max(table.end,sy+335)+17;
+   if(table.remaining.length){continuation(page);tableFlow(page,page.headers,table.remaining,[3,1.25]);}
+   note(page,page.note);
+ }
  function combinedOld(page,next){if(page.metrics?.length)metrics(page,page.metrics);const w=(CW-22)/2,sy=y;const l=panelTable(page.headers,page.rows||[],L,sy,w,B-48,'Estados de la cohorte anterior',[3,1,1],12.4);const rr=panelTable(next.headers,next.rows||[],L+w+22,sy,w,B-48,'Detalle de novedades',[2.2,1.3,1.25],12);y=Math.max(l.end,rr.end)+16;note(page,page.note);if(l.remaining.length){continuation(page);tableFlow(page,page.headers,l.remaining,page.widths);}if(rr.remaining.length){start(next,true);tableFlow(next,next.headers,rr.remaining,next.widths);} }
  function combinedNews(page,next){const rowsOf=x=>x.rows?.length?x.rows:[['[Empresa / fondo]','[Nombre / referencia]','[Periodo]','Pendiente','Pendiente','[Observación]']];const title=(s)=>clean(s).replace(/ · cartera$/,'');p.txt(title(page.title),L,y,CW,17,BLACK,true);y+=28;tableFlow(page,page.headers,rowsOf(page),page.widths);note(page,page.note);ensure(next,90);p.txt(title(next.title),L,y,CW,17,BLACK,true);y+=28;tableFlow(next,next.headers,rowsOf(next),next.widths);note(next,next.note);}
  function generic(page){if(page.metrics?.length)metrics(page,page.metrics);if(page.bars?.length){const max=Math.max(1,...page.bars.map(b=>Number(b[1])||0));for(const b of page.bars){ensure(page,43);p.txt(b[0],L,y+3,345,14,BLACK,true);p.rect(L+350,y+2,375,21,ALT);p.rect(L+350,y+2,375*Math.max(0,Number(b[1])||0)/max,21,Y);p.txt(b[2]??b[1],L+742,y+2,132,13,BLACK,true);y+=40;}}if(page.headers?.length)tableFlow(page,page.headers,page.rows||[],page.widths);note(page,page.note);}
@@ -35,7 +62,10 @@ function layout(payload){
  if(title.includes('Novedades de estudiantes antiguos')&&next?.title.includes('Detalle de novedades de antiguos')){start(page);combinedOld(page,next);i++;continue;}
  if(title.includes('Vigencias anteriores · cartera')&&next?.title.includes('Novedades 2026-2 · cartera')){start({...page,title:title.replace('Vigencias anteriores · cartera','Novedades de cartera')});combinedNews(page,next);i++;continue;}
  start(page);
- if(title.includes('Caracterización de beneficiarios')&&page.headers?.[0]==='Dimensión')characterize(page);
+ if(page.kind==='comparison')financialComparison(page);
+ else if(page.kind==='portfolio')financialPortfolio(page);
+ else if(page.kind==='fundSummary')financialFundSummary(page);
+ else if(title.includes('Caracterización de beneficiarios')&&page.headers?.[0]==='Dimensión')characterize(page);
  else if(title.includes('más valoran del beneficio')&&page.bars?.length)motivation(page);
  else if(title.includes('Embudo de convocatoria')&&page.bars?.length)funnel(page);
  else if(/Estado actual del fondo educativo|Brecha financiera del fondo/.test(title)&&page.headers?.length===2)financial(page);

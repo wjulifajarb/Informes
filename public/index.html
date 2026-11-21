@@ -413,8 +413,184 @@ function addFinancialReportV34(payload){
 }
 const renderBeforeFinanceV34=render;
 render=function(){renderBeforeFinanceV34();renderFinV34();};
+/**
+ * EDUCAMÁS 2027-I · V4.1
+ * Informe ejecutivo descargable. No modifica la consulta ni la interfaz de gestión.
+ * La información financiera se toma de financialV34 (Proye-*) y las personas de JULI.
+ */
+function buildExecutiveReportV41(){
+  const groupFilter=$('group').value, companyFilter=$('company').value;
+  const records=scoped();
+  const financial=data.financialV34||{};
+  const summaries=(financial.summary||[]).filter(x=>!groupFilter||norm(x.group)===norm(groupFilter));
+  if(!summaries.length)throw Error('No hay datos de las hojas Proye-* en la API. Actualiza la conexión antes de exportar.');
+  const title=scopeName();
+  const pages=[{title:'Convocatoria 2027-I',cover:true}];
+  const push=(t,p)=>pages.push({title:t,...p});
+  const money=v=>v===null||v===undefined||v===''?'Pendiente':fmt(v);
+  const asNumber=v=>typeof v==='number'&&Number.isFinite(v)?v:null;
+  const addNum=(a,b)=>asNumber(a)!==null&&asNumber(b)!==null?a+b:null;
+  const isEnrolled=r=>countedStatus(r.status)||/graduad|retiro|retirad/i.test(norm(r.status))||
+    (r.stage==='Cerrado'&&/graduac|retiro/i.test(norm(r.fund)));
+  const status=r=>r.status||'Sin dato';
+  const selectedGroupRows=g=>records.filter(r=>norm(r.group)===norm(g));
+  const paidByGroup=g=>(financial.paidDetail||[]).filter(p=>norm(p.group)===norm(g)&&(!companyFilter||norm(p.company)===norm(companyFilter)));
+  const valueSum=(arr,field)=>{const vals=arr.map(x=>asNumber(x[field])).filter(x=>x!==null);return vals.length?vals.reduce((a,b)=>a+b,0):null;};
+  const gName=companyFilter?`Empresa: ${companyFilter} · fondo: ${groupFilter}`:title;
+  const source='Fuente: JULI-2027-1 (columnas A y E y campos públicos) y hojas financieras Proye-*. Los datos internos no se incluyen.';
+  const financeNote='Datos del fondo sujetos a validación de Finanzas. Campos no diligenciados se muestran como Pendiente, no como $0. Los recursos pendientes de recuperar no son efectivo en caja.';
+  const sharedNote=companyFilter?' IMPORTANTE: el saldo, la cartera y la donación corresponden al fondo compartido del grupo, NO a la filial seleccionada.':' Las cifras monetarias corresponden al fondo del grupo, sin distribuirlas arbitrariamente entre filiales.';
+
+  const enrolled=records.filter(isEnrolled);
+  const activeEnrolled=enrolled.filter(r=>r.isActive&&countedStatus(r.status));
+  const paid=enrolled.filter(r=>r.isActive&&norm(r.status)==='pagado');
+  const pending=enrolled.filter(r=>r.isActive&&/^(pre-aprobado|preaprobado|aprobado|docs completados|documentos completados)$/.test(norm(r.status)));
+  push('Panorama de la convocatoria · '+gName,{
+    section:'01 / CONVOCATORIA',
+    metrics:[['Inscritos y estados posteriores',enrolled.length],['Formalizados activos',activeEnrolled.length],['Pendientes por pagar',pending.length],['Con estado Pagado',paid.length]],
+    headers:['Estado de postulación (E)','Cantidad'],
+    rows:[['Inscrito',activeEnrolled.filter(r=>norm(r.status)==='inscrito').length],
+      ['Pre-aprobado',activeEnrolled.filter(r=>['pre-aprobado','preaprobado'].includes(norm(r.status))).length],
+      ['Aprobado / documentos completos',activeEnrolled.filter(r=>['aprobado','docs completados','documentos completados'].includes(norm(r.status))).length],
+      ['Pagado',paid.length],
+      ['Cierres o novedades de personas inscritas',enrolled.filter(r=>!r.isActive).length]],
+    widths:[3,1],
+    note:source+' Los estados de cierre se informan, pero no se suman como activos. El anexo final contiene la lista nominal.'
+  });
+  if(!groupFilter){
+    push('Resumen financiero por grupo empresarial',{
+      section:'02 / CONSOLIDADO',
+      headers:['Grupo / fondo','Pendientes','Matrículas base','Administración','Disponible','Donación base','Pagados'],
+      rows:summaries.map(s=>[s.group,s.base??'Pendiente',money(s.tuitionBase),money(s.feeBase),money(s.cash),money(s.donationBase),s.paidCount??0]),
+      widths:[2,.7,1.35,1.35,1.3,1.35,.65],
+      note:financeNote+' No se totalizan fondos cuyos saldos todavía no están diligenciados.'
+    });
+  }
+
+  for(const s of summaries){
+    const g=s.group,h=(financial.history||[]).find(x=>norm(x.group)===norm(g))||{};
+    const gPeople=selectedGroupRows(g), gPaid=paidByGroup(g);
+    const totalConfirmed=valueSum(gPaid,'paidAmount'), estimatedPaid=valueSum(gPaid,'tuitionReference');
+    const quota=(financial.quotas||[]).filter(q=>norm(q.group)===norm(g));
+    const fundSource=s.sheet||'Proye-'+g;
+    const localScope=companyFilter?g+' · '+companyFilter:g;
+    const groupCaution=financeNote+sharedNote;
+    const historyLoaded=Boolean(s.historyDataLoaded);
+
+    push('Estado actual del fondo · '+g,{
+      kind:'fundSummary',section:'02 / ESTADO ACTUAL DEL FONDO',
+      headers:['Concepto','Valor COP'],
+      rows:[['(+) Disponible anterior 2026-I',money(h.initial)],
+        ['(+) Donación recibida 2026-II',money(h.donation2026)],
+        ['(=) Disponible convocatoria 2026-II',money(s.cells?.C8)],
+        ['(-) Matrículas pagadas 2026-II',money(h.tuitionPaid2026)],
+        ['(-) Gastos administrativos 2026-II',money(h.admin2026)],
+        ['(=) Total descuentos 2026-II',money(s.cells?.C12)],
+        ['(=) Saldo del fondo 2026-II',money(s.cells?.C14)],
+        ['(+) Recuperaciones adicionales confirmadas',money(h.cashRecovered)],
+        ['(=) DISPONIBLE PARA 2027-I',money(s.cash)]],
+      highlightLabel:'FONDO DISPONIBLE',highlightValue:money(s.cash),
+      highlightText:historyLoaded?'Histórico diligenciado, sujeto a validación':'Histórico pendiente de diligenciar',
+      note:'Origen: '+fundSource+' · C6:C17. Recaudos por conciliar: '+money(h.unreconciled)+'. No sumarlos a caja sin certificación. '+groupCaution
+    });
+
+    // La simulación de aprobación final utiliza las entradas F24/F25 y la tarifa C20.
+    // Si no hay decisión empresarial registrada, NO inventa cifras finales.
+    const approved=asNumber(s.finalApproved), authorized=asNumber(s.authorized), feeUnit=asNumber(s.unitFee), avail=asNumber(s.cash);
+    const simFee=approved!==null&&feeUnit!==null?approved*feeUnit:null;
+    const simDonation=authorized!==null&&simFee!==null&&avail!==null?Math.max(0,authorized+simFee-avail):null;
+    const diff=simDonation!==null&&asNumber(s.donationBase)!==null?simDonation-s.donationBase:null;
+    const moneyDelta=diff===null?'Pendiente':(diff>0?'+':'')+fmt(diff);
+    push('Proyección 2027-I + simulador · '+g,{
+      kind:'comparison',section:'03 / PROYECCIÓN Y SIMULADOR',
+      leftTitle:'Proyección base · Educamás (Sheets)',
+      leftHeaders:['Rubro','Base 2027-I'],
+      leftRows:[['Preaprobados/aprobados pendientes',s.base??'Pendiente'],
+        ['(+) Valor de matrículas',money(s.tuitionBase)],
+        ['Tarifa por persona',money(s.unitFee)],
+        ['(+) Gastos administrativos',money(s.feeBase)],
+        ['(-) Disponible del fondo',money(s.cash)],
+        ['(=) DONACIÓN REQUERIDA',money(s.donationBase)],
+        ['Matrículas por revisar',s.invalidTuitionCount??'Pendiente']],
+      rightTitle:'Simulación · aprobación final empresa',
+      rightHeaders:['Rubro','Escenario final'],
+      rightRows:[['Final aprobados (F24)',approved??'Pendiente'],
+        ['(+) Matrículas autorizadas (F25)',money(authorized)],
+        ['Tarifa administrativa',money(feeUnit)],
+        ['(+) Administración estimada',money(simFee)],
+        ['(-) Disponible del fondo',money(avail)],
+        ['(=) DONACIÓN FINAL SIMULADA',money(simDonation)],
+        ['Diferencia frente a base',moneyDelta]],
+      note:'Base: '+fundSource+' · C20, C24:C29. Simulación: F24 y F25 (entradas de aprobación empresarial), tarifa C20 y disponible C17. Sin F24/F25, la simulación permanece pendiente. No se contabilizan dos veces matrículas con estado Pagado.'+sharedNote
+    });
+
+    push('Estado de cartera 2026-II · '+g,{
+      kind:'portfolio',section:'04 / CARTERA Y RECUPERACIÓN',
+      leftTitle:'Informativo 2026-II · Estado de cartera',
+      leftHeaders:['Concepto','Valor COP'],
+      leftRows:[['(-) Matrículas pagadas 2026-II',money(h.carteraTuition)],
+        ['(-) Becas o beneficios no recuperables',money(h.uncollectableBenefits)],
+        ['(=) Matrículas a recuperar',money(h.cartera2026)],
+        ['(+) Vigencias anteriores',money(h.previousDue)],
+        ['(=) TOTAL A RECUPERAR',money(h.totalDue)],
+        ['Recuperado',money(h.collected)],
+        ['% recuperación',h.collectedPct===null||h.collectedPct===undefined?'Pendiente':new Intl.NumberFormat('es-CO',{style:'percent',maximumFractionDigits:1}).format(h.collectedPct)],
+        ['(=) PENDIENTE POR RECUPERAR',money(h.outstanding)]],
+      rightTitle:'Calendario de descuentos pendientes',
+      rightHeaders:['Rubro / período','Programado COP'],
+      rightRows:[...quota.map(q=>[q.period+' · '+q.type,money(q.scheduled)]),
+        ['(=) TOTAL CUOTAS PENDIENTES',money(s.cells?.C51)],
+        ['Diferencia de conciliación',money(s.cells?.C52)]],
+      note:'Origen: '+fundSource+' · C33:C52. Las cuotas programadas no son pagos recuperados. '+groupCaution
+    });
+
+    push('Pagos reportados 2027-I · '+localScope,{
+      section:'05 / PAGOS REGISTRADOS',
+      metrics:[['Estudiantes estado Pagado',gPaid.length],['Monto informado en JULI BH',money(totalConfirmed)],['Matrículas de pagados (AY)',money(estimatedPaid)],['Pagados sin BH confirmado',gPaid.filter(p=>asNumber(p.paidAmount)===null).length]],
+      headers:['Estudiante','Empresa / filial','Matrícula aprox. AY','Monto pagado BH','Fecha de pago'],
+      rows:gPaid.map(p=>[p.name,p.company,money(p.tuitionReference),money(p.paidAmount),p.paidDate||'Pendiente']),
+      widths:[2,1.5,1.2,1.2,1],
+      note:'El estado Pagado no certifica por sí mismo una cifra. BH indica monto reportado por Finanzas; AY y Aprobación anticipada son referencias y no se suman como pagos efectivos. Los pagos 2027-I no se vuelven a restar del saldo histórico 2026-II.'
+    });
+
+    const byComp=new Map();
+    gPeople.forEach(r=>{const key=r.company||'Sin empresa identificada';if(!byComp.has(key))byComp.set(key,[]);byComp.get(key).push(r);});
+    if(byComp.size>1){
+      push('Detalle de convocatoria por empresa · '+g,{
+        section:'06 / EMPRESAS DEL GRUPO',
+        headers:['Empresa / filial','Inscritos y posteriores','Formalizados activos','Preaprobados / aprobados','Pagados'],
+        rows:[...byComp].map(([company,list])=>[
+          company,list.filter(isEnrolled).length,
+          list.filter(r=>r.isActive&&countedStatus(r.status)).length,
+          list.filter(r=>r.isActive&&/^(pre-aprobado|preaprobado|aprobado|docs completados|documentos completados)$/.test(norm(r.status))).length,
+          list.filter(r=>r.paid).length
+        ]),
+        widths:[2.1,1.5,1.3,1.6,1],
+        note:source+' No se distribuye el fondo compartido entre filiales; los montos oficiales pertenecen al grupo.'
+      });
+    }
+  }
+
+  // Anexo final, después de todos los capítulos financieros. Incluye cada
+  // postulación única desde Inscrito en adelante y los cierres reportados,
+  // excluyendo Registro y Pre-registro como pidió la usuaria.
+  const appendix=enrolled.slice().sort((a,b)=>
+    a.group.localeCompare(b.group,'es')||a.company.localeCompare(b.company,'es')||a.name.localeCompare(b.name,'es'));
+  push('ANEXO · Personas inscritas y estado actual',{
+    section:'07 / ANEXO INFORMATIVO · BASE JULI',
+    headers:['Grupo','Empresa / filial','Estudiante','Estado (E)','Fondo (A)','Matrícula aprox.','Pagado BH','Fila'],
+    rows:appendix.map(r=>[
+      r.group,r.company,r.name,status(r),r.fund||'Sin dato',money(r.tuition),
+      r.paid?money(r.paidAmount):'No aplica',r.row
+    ]),
+    widths:[1.05,1.22,1.78,1.13,1.14,1.08,1.03,.45],
+    note:'Incluye Inscrito, Pre-aprobado, Aprobado, Docs completados y Pagado; también novedades de cierre vinculadas a postulaciones. Excluye Registro y Pre-registro. Fuente: JULI-2027-1 (A, E, F, G, H, AY y BH), una fila por postulación única. No se divulgan campos internos. Montos BH vacíos = sin cifra de pago confirmada.'
+  });
+  return {name:title,pages};
+}
+
 const reportBeforeFinanceV34=makeReport;
-makeReport=function(){return addFinancialReportV34(reportBeforeFinanceV34());};
+makeReport=function(){return activeSegment?reportBeforeFinanceV34():buildExecutiveReportV41();};
 
 $('loginForm').onsubmit=async e=>{e.preventDefault();$('loginError').textContent='';const b=e.target.querySelector('button');b.disabled=true;try{await request('login',{password:$('password').value});$('password').value='';showApp()}catch(err){$('loginError').textContent=err.message}finally{b.disabled=false}};
 $('logout').onclick=async()=>{try{await request('logout');}finally{location.reload()}};
