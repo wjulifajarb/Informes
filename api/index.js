@@ -28,7 +28,7 @@ module.exports=async function handler(req,res){
   if(p.action==='logout'){res.setHeader('Set-Cookie',cookie(req,'',0));return send(res,200,{ok:true})}
   if(!authorized(req))return send(res,401,{ok:false,error:'Inicia sesión de nuevo'});
   if(p.action==='session')return send(res,200,{ok:true});
-  if(!['data','export'].includes(p.action))return send(res,400,{ok:false,error:'Acción no válida'});
+  if(!['data','finance','diagnostic','export'].includes(p.action))return send(res,400,{ok:false,error:'Acción no válida'});
   if(p.action==='export'&&(!['pptx','pdf'].includes(p.format)||!Array.isArray(p.payload?.pages)||p.payload.pages.length>250))return send(res,400,{ok:false,error:'Informe inválido'});
   if(p.action==='export'){try {const out=await require('./report.js').exportReport(p.payload,p.format);return send(res,200,{ok:true,data:out});}catch(err){return send(res,500,{ok:false,error:'No se pudo generar el informe: '+String(err.message).slice(0,200)});}}
   const payload={action:p.action,token:process.env.APPS_SCRIPT_TOKEN};if(p.action==='export'){payload.format=p.format;payload.payload=p.payload;}
@@ -38,6 +38,37 @@ module.exports=async function handler(req,res){
     const j=await upstream.json().catch(()=>null);
     if(!j)return send(res,502,{ok:false,error:'Apps Script no respondió JSON. Verifica que la URL termina en /exec y que la implementación permite solicitudes del servidor.'});
     if(!j.ok)return send(res,502,{ok:false,error:j.error||'Error en Apps Script'});
+    if(p.action==='data' && j.data && typeof j.data==='object') {
+      const d=j.data;
+      const ok=Array.isArray(d.financialV34?.summary)&&d.financialV34.summary.length>0;
+      if(!ok){
+        // Consulta de respaldo, útil si el bloque no vino en `data`.
+        // Solo aceptamos el formato V3.9, con datos de pagos y cartera.
+        try{
+          const alternate=await fetch(process.env.APPS_SCRIPT_URL,{
+            method:'POST',headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({action:'finance',token:process.env.APPS_SCRIPT_TOKEN}),
+            redirect:'follow',signal:AbortSignal.timeout(20_000)
+          });
+          if(alternate.ok){
+            const fj=await alternate.json();
+            if(fj?.ok && String(fj.data?.apiVersion||'').startsWith('3.9.') &&
+              Array.isArray(fj.data.financialV34?.summary)){
+              for(const field of ['financialV34','financialSimple','finance','cartera','cuotas'])
+                if(fj.data[field]!==undefined)d[field]=fj.data[field];
+              d.apiVersion=fj.data.apiVersion;
+            }
+          }
+        }catch(_err){ /* Preservar los registros y reportar el diagnóstico. */ }
+      }
+      if(!Array.isArray(d.financialV34?.summary)||!d.financialV34.summary.length){
+        d.financialIssue='Tu Apps Script aún no envía las proyecciones Proye-*. ' +
+          'Publica Code.gs V3.9 en la implementación existente y pulsa Actualizar.';
+      }else if(d.financialV34.summary.length<7){
+        d.financialIssue='Se recibieron '+d.financialV34.summary.length+
+          ' de los 7 fondos. Revisa las hojas Proye-* y testV39.';
+      }else d.financialIssue='';
+    }
     return send(res,200,{ok:true,data:j.data});
   }catch{return send(res,502,{ok:false,error:'No se pudo comunicar con Apps Script. Revisa la URL, permisos y tiempo de ejecución.'})}
 };
