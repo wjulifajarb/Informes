@@ -1,0 +1,16 @@
+EDUCAMÁS V4.5 — SOLO CAMBIO VISUAL DE PORTADA PDF / POWERPOINT
+
+SI YA TIENES V4.4 FUNCIONANDO:
+  1) En Visual Studio Code, REEMPLAZA SOLO api/report.js
+  2) No reemplaces public/index.html, api/index.js, server.js, .env.local ni Code.gs
+  3) Ejecuta npm run check && npm run dev
+
+SI QUIERES REEMPLAZAR TODA LA CARPETA:
+  1) Haz una copia de tu carpeta anterior.
+  2) Abre esta carpeta completa en Visual Studio Code.
+  3) Copia tu archivo .env.local anterior a la raíz de este proyecto (no viene en el ZIP).
+  4) npm install && npm run check && npm test && npm run dev
+
+El símbolo original a-color.png está incluido en assets/.
+El PDF/PPT usa el símbolo embebido en api/report.js, sin pedir archivos adicionales a Vercel.
+Google Apps Script V3.9 permanece IGUAL, sin publicar otra versión.

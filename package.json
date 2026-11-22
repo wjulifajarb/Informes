@@ -1,6 +1,6 @@
 {
   "name": "educamas-fondos-2027-1",
-  "version": "3.9.0",
+  "version": "4.6.0",
   "private": true,
   "engines": {
     "node": "22.x"
@@ -11,8 +11,9 @@
     "check": "node --check server.js && node --check api/index.js && node scripts/check.js && node --check api/report.js",
     "secrets": "node -e \"console.log(require('node:crypto').randomBytes(32).toString('hex'))\"",
     "configurar": "node scripts/configure.js",
-    "test": "node scripts/test-report.js && node scripts/test-data.js && node scripts/test-v36.js && node scripts/test-v37.js && node scripts/test-v38.js && node scripts/test-v39.js",
-    "conectar": "node scripts/connect.js"
+    "test": "node scripts/test-report.js && node scripts/test-data.js && node scripts/test-v39.js && node scripts/test-v41.js && node scripts/test-v42.js && node scripts/test-v43.js && node scripts/test-v44.js && node scripts/test-v45.js && node scripts/test-v46.js",
+    "conectar": "node scripts/connect.js",
+    "test:legacy": "node scripts/test-v36.js && node scripts/test-v37.js && node scripts/test-v38.js"
   },
   "dependencies": {
     "pptxgenjs": "^4.0.1"
