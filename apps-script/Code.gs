@@ -1,5 +1,5 @@
 /** EDUCAMÁS · API privada para la aplicación de VS Code. */
-const API_VERSION = '3.9.0';
+const API_VERSION = '4.7.0';
 const CFG = { id:'1TkVBmU6NOCVpPkSdAUpXeUREAclVdWQnquJNh7y-bZE', sheet:'JULI-2027-1', period:'2027-1', refresh:60, minTuition:1000 };
 function json_(obj){return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);}
 function doGet(){return json_({ok:true,service:'Educamas 2027-1',version:API_VERSION,message:'API activa. Los datos requieren una solicitud POST autenticada.'});}
@@ -135,6 +135,87 @@ const PROYE_HOJAS = [
   {group:'Grupo Bergé Colombia',sheet:'Proye-Grupo Bergé'},
   {group:'EducaMás',sheet:'Proye-EducaMás'}
 ];
+
+/**
+ * V4.7 · Proyecciones INDIVIDUALES del grupo Filiales Grupo Vigía.
+ * El fondo financiero del grupo continúa en PROYE_HOJAS / summary (7 fondos).
+ * Estas proyecciones son DESGLOSES de costo: no tienen saldo ni donación neta propia.
+ * Leer exclusivamente. Nunca cambia datos ni fórmulas de Sheets.
+ */
+const PROYE_FILIALES = [
+  {group:'Filiales Grupo Vigía',company:'Pharitech (Transportes Vigía)',sheet:'Proye · Pharitech',peopleSheet:'Filial · Pharitech'},
+  {group:'Filiales Grupo Vigía',company:'Phari SAS (Transportes Vigía)',sheet:'Proye · Phari SAS',peopleSheet:'Filial · Phari SAS'},
+  {group:'Filiales Grupo Vigía',company:'Vigía Transportes Especial (Transportes Vigía)',sheet:'Proye · Vigía Especial',peopleSheet:'Filial · Vigía Especial'},
+  {group:'Filiales Grupo Vigía',company:'Vlogic (Transportes Vigía)',sheet:'Proye · Vlogic',peopleSheet:'Filial · Vlogic'},
+  {group:'Filiales Grupo Vigía',company:'Enérgika (Transportes Vigía)',sheet:'Proye · Enérgika',peopleSheet:'Filial · Enérgika'},
+  {group:'Filiales Grupo Vigía',company:'Sin empresa identificada',sheet:'Proye · Sin empresa',peopleSheet:'Filial · Sin empresa'}
+];
+
+/** Convierte valores de B1:H130 en proyecciones utilizables por la web V4.7. */
+function readFilialProjections_(ss,people){
+  const result=[],missing=[];
+  // Solo agregado global. Se muestra como referencia para evitar repartirlo o duplicarlo.
+  const master=ss.getSheetByName('Proye-Filiales Vigía');
+  const commonCash=master?numFinance_(master.getRange('C17').getValue()):null;
+  PROYE_FILIALES.forEach(function(cfg){
+    const sh=ss.getSheetByName(cfg.sheet);
+    const personSheet=ss.getSheetByName(cfg.peopleSheet);
+    if(!sh){missing.push(cfg.sheet);return;}
+    if(!personSheet)missing.push(cfg.peopleSheet);
+    const grid=sh.getRange('B1:H130').getValues();
+    const col={B:0,C:1,D:2,E:3,F:4,G:5,H:6};
+    const raw=function(row,letter){const i=col[letter||'C'];return grid[row-1]?.[i];};
+    const n=function(row,letter){return numFinance_(raw(row,letter));};
+    const isSameCompany=r=>norm_(r.group)===norm_(cfg.group)&&norm_(r.company)===norm_(cfg.company);
+    const ppl=(people||[]).filter(isSameCompany);
+    const active=ppl.filter(r=>r.isActive);
+    const paid=active.filter(r=>norm_(r.status)==='pagado');
+    const confirmedPaid=paid.filter(r=>r.paidAmount!==null&&r.paidAmount>0);
+    const invalid=n(29)||0;
+    const gross=n(28); // COSTO BRUTO individual (matrícula + fee), NO donación neta.
+    const paidTuition=confirmedPaid.length?sumValid_(confirmedPaid.map(r=>r.paidAmount)):null;
+    const feePaid=n(20)!==null?paid.length*n(20):null;
+    const referencePaid=paid.filter(r=>r.tuition!==null);
+    result.push({
+      group:cfg.group,company:cfg.company,sheet:cfg.sheet,peopleSheet:cfg.peopleSheet,
+      // Diferenciar origen y alcance del dinero para que nunca se descuente dos veces.
+      scope:'individual',fundSheet:'Proye-Filiales Vigía',sharedFund:true,
+      sharedCash:commonCash!==null?commonCash:n(17),allocatedCash:null,
+      donationBase:null,donationFinal:null,
+      records:ppl.length,active:active.length,
+      universe:ppl.filter(isUniverseFinancial_).length,
+      paidCount:paid.length,paidAmountReported:paidTuition,
+      paidCountWithAmount:confirmedPaid.length,
+      paidToConfirm:paid.length-confirmedPaid.length,
+      paidTuitionReference:referencePaid.length?sumValid_(referencePaid.map(r=>r.tuition)):null,
+      paidFeeEstimated:feePaid,
+      paidProvisionReference:referencePaid.length&&feePaid!==null?
+        sumValid_(referencePaid.map(r=>r.tuition))+feePaid:null,
+      paidAmountPlusFeeConfirmed:paid.length&&confirmedPaid.length===paid.length&&feePaid!==null?
+        paidTuition+feePaid:null,
+      // Importes individuales provenientes de sus propias fórmulas C24:C29.
+      base:n(24),tuitionBase:n(25),feeBase:n(26),costGross:gross,
+      unitFee:n(20),threshold:n(18),invalidTuitionCount:invalid,
+      finalApproved:n(24,'F'),authorized:n(25,'F'),feeFinal:n(26,'F'),costFinalGross:n(28,'F'),
+      validation:invalid>0?'Revisar '+invalid+' matrícula(s) antes de validar el costo':
+        'Proyección de filial sin alertas de matrícula',
+      // C33:C52 son HISTÓRICOS DEL GRUPO, mostrados solo como referencia.
+      portfolioScope:'grupo',portfolioShared:{
+        totalRecoverable:n(37),collected:n(39),recoveredPercent:n(40),pending:n(41),
+        scheduled:n(51),difference:n(52)
+      },
+      cells:{C17:n(17),C18:n(18),C20:n(20),C24:n(24),C25:n(25),
+        C26:n(26),C28:gross,C29:n(29),F24:n(24,'F'),F25:n(25,'F'),
+        F26:n(26,'F'),F28:n(28,'F'),C124:n(124),E124:n(124,'E'),
+        C125:n(125),E125:n(125,'E')},
+      notes:'Costo de esta empresa antes de distribuir el fondo del grupo. '+
+        'El saldo de 2027-I y la cartera son compartidos; la donación NETA '+
+        'se calcula una sola vez en Proye-Filiales Vigía. '+
+        (invalid>0?'Hay matrículas sin valor válido: el subtotal de la filial está incompleto.':'')
+    });
+  });
+  return {items:result,missingSheets:missing};
+}
 
 function numFinance_(x){
   if(x===null||x===undefined||x==='')return null;
@@ -326,6 +407,10 @@ function readFinancialSimple_(ss,people){
     });
   });
 
+  // V4.7: proyecciones adicionales; NO se agregan a summary, history ni a
+  // los 7 fondos originales. Los costos de las filiales ya están dentro del grupo.
+  const filiales=readFilialProjections_(ss,people);
+
   const warning='Cifras 2026-II manuales y sujetas a validación de Finanzas. '+
     'C25 excluye provisionalmente matrículas por debajo de C18. '+
     'Los pagos con Estado=Pagado se listan por separado. Solo BH de JULI es monto efectivamente reportado por Finanzas; el precio de matrícula anticipada es referencia, no un importe bancario conciliado. '+
@@ -334,9 +419,11 @@ function readFinancialSimple_(ss,people){
   return {
     legacyFinance,legacyCartera,legacyCuotas,
     financialV34:{summary,history,companies,quotas,detail,paidDetail,
+      filialProjections:filiales.items,missingFilialSheets:filiales.missingSheets,
       source:'JULI-2027-1 + Aprobación anticipada (referencia) + Consolidado + hojas Proye-...',
       missingSheets:missing,warning},
-    financialSimple:{groups:models,missingSheets:missing,warning}
+    financialSimple:{groups:models,filials:filiales.items,
+      missingFilialSheets:filiales.missingSheets,missingSheets:missing,warning}
   };
 }
 
@@ -388,5 +475,35 @@ function testV39(){
   console.log(JSON.stringify(result,null,2));
   if(f.summary.length!==7)throw Error('No se encontraron los 7 fondos: revisar hojas Proye-*');
   if(!r||r.cash===null||r.donationBase===null)throw Error('Residere no trae C17/C28');
+  return result;
+}
+
+
+/**
+ * Prueba V4.7: lectura de las seis proyecciones y conciliación con el grupo.
+ * No escribe ni cambia nada en Google Sheets, no incluye datos personales.
+ */
+function testFilialesV47(){
+  const d=getData_();
+  const f=d.financialV34;
+  const g=f.summary.find(x=>norm_(x.group)==='filiales grupo vigia');
+  const items=f.filialProjections||[];
+  if(items.length!==PROYE_FILIALES.length)
+    throw Error('Faltan proyecciones de filiales: '+JSON.stringify(f.missingFilialSheets));
+  if(!g)throw Error('No se encontró el fondo financiero consolidado de Filiales');
+  const sum=function(field){return sumValid_(items.map(x=>x[field]));};
+  const result={version:API_VERSION,funds:f.summary.length,
+    filials:items.length,missingFilialSheets:f.missingFilialSheets,
+    grupo:{base:g.base,tuition:g.tuitionBase,fee:g.feeBase,cash:g.cash},
+    filiales:{base:sum('base'),tuition:sum('tuitionBase'),fee:sum('feeBase')},
+    detalle:items.map(x=>({company:x.company,base:x.base,
+      tuition:x.tuitionBase,fee:x.feeBase,costGross:x.costGross,
+      invalid:x.invalidTuitionCount,allocatedCash:x.allocatedCash}))};
+  console.log(JSON.stringify(result,null,2));
+  if(f.summary.length!==7)throw Error('Se alteró el conteo de los 7 fondos originales');
+  if(result.grupo.base!==result.filiales.base||
+     Math.abs(result.grupo.tuition-result.filiales.tuition)>0.01||
+     Math.abs(result.grupo.fee-result.filiales.fee)>0.01)
+    throw Error('Los subtotales de filiales no coinciden con el fondo grupal');
   return result;
 }

@@ -1,8 +1,3 @@
-V4.6 - REEMPLAZO DESDE V4.5
-1. public/index.html -> REEMPLAZAR
-2. api/report.js -> REEMPLAZAR
-3. package.json -> OPCIONAL (solo agregar pruebas)
-4. scripts/test-v46.js -> OPCIONAL (prueba nueva)
-5. api/index.js, server.js, vercel.json, apps-script/Code.gs -> CONSERVAR
-6. .env.local -> NO SOBREESCRIBIR, NO SUBIR A INTERNET
-La tarjeta del fee aplica por cada pago con estado E=Pagado y tarifa C20 del fondo. Total BH+fee solo cuando todos los BH estén confirmados. AY+fee es proyección informativa.
+V4.9 desde V4.8: reemplazar solo public/index.html y api/report.js.
+No cambiar Apps Script Code.gs V4.7, api/index.js, Google Sheets ni variables de entorno.
+Aplicar despliegue Vercel tras verificar con npm run check y npm test.

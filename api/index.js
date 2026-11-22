@@ -52,7 +52,7 @@ module.exports=async function handler(req,res){
           });
           if(alternate.ok){
             const fj=await alternate.json();
-            if(fj?.ok && String(fj.data?.apiVersion||'').startsWith('3.9.') &&
+            if(fj?.ok && (/^(3\.9\.|4\.7\.)/.test(String(fj.data?.apiVersion||''))) &&
               Array.isArray(fj.data.financialV34?.summary)){
               for(const field of ['financialV34','financialSimple','finance','cartera','cuotas'])
                 if(fj.data[field]!==undefined)d[field]=fj.data[field];
@@ -63,7 +63,7 @@ module.exports=async function handler(req,res){
       }
       if(!Array.isArray(d.financialV34?.summary)||!d.financialV34.summary.length){
         d.financialIssue='Tu Apps Script aún no envía las proyecciones Proye-*. ' +
-          'Publica Code.gs V3.9 en la implementación existente y pulsa Actualizar.';
+          'Publica Code.gs V4.7 en la implementación existente y pulsa Actualizar.';
       }else if(d.financialV34.summary.length<7){
         d.financialIssue='Se recibieron '+d.financialV34.summary.length+
           ' de los 7 fondos. Revisa las hojas Proye-* y testV39.';

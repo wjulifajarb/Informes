@@ -1,0 +1,9 @@
+CAMBIOS V4.8
+- Seis proyecciones individuales de Filiales Grupo Vigía integradas en HTML, PDFs y PPTs.
+- Todos los cargos reales incluidos en HTML e informe (no agrupados en «Otros»).
+- Navegación, tipografía y disposición de tarjetas y tablas optimizadas para escritorio/móvil.
+- Embudos y encabezados ajustados editorialmente al ejemplo 2026-II, sin copiar sus cifras.
+- Siete fondos originales intactos; saldo compartido no se duplica ni se descuenta por filial.
+- Todos los estados de convocatoria se leen de la columna E. B no se utiliza.
+- Se conserva la caracterización, pagos, fee, históricos, simulación, cartera, anexos y exportaciones.
+- El proyecto integra Code.gs V4.7 completo y pruebas automáticas V4.8.

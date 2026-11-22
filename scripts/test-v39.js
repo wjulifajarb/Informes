@@ -8,7 +8,7 @@ const gs=fs.readFileSync(path.join(__dirname,'../apps-script/Code.gs'),'utf8');
 const html=fs.readFileSync(path.join(__dirname,'../public/index.html'),'utf8');
 const bridge=fs.readFileSync(path.join(__dirname,'../api/index.js'),'utf8');
 new vm.Script(gs);
-assert(gs.includes("const API_VERSION = '3.9.0'"));
+assert(gs.includes("const API_VERSION = '4.7.0'"));
 assert(gs.includes("p.action==='finance'"));
 assert(gs.includes("p.action==='diagnostic'"));
 assert(gs.includes('financialV34:d.financialV34'));
@@ -69,7 +69,7 @@ async function main(){
   };
   const outdated=await run({action:'data'},cookie);
   assert.equal(outdated.body.ok,true);
-  assert.match(outdated.body.data.financialIssue,/Code.gs V3.9/);
+  assert.match(outdated.body.data.financialIssue,/Code.gs V4.7/);
   assert.equal(outdated.body.data.financialV34,undefined);
   assert.deepEqual(calls,['data','finance']);
   console.log('V3.9: API actualizada, fallback financiero, fondo parcial y mensaje de implementación antigua: OK');

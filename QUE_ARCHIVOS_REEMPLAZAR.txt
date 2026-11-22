@@ -1,16 +1,22 @@
-EDUCAMÁS V4.5 — SOLO CAMBIO VISUAL DE PORTADA PDF / POWERPOINT
+EDUCAMÁS V4.8 · INTEGRACIÓN DE FILIALES + TODOS LOS CARGOS + MEJOR UX/UI
 
-SI YA TIENES V4.4 FUNCIONANDO:
-  1) En Visual Studio Code, REEMPLAZA SOLO api/report.js
-  2) No reemplaces public/index.html, api/index.js, server.js, .env.local ni Code.gs
-  3) Ejecuta npm run check && npm run dev
+SI YA TIENES V4.6 FUNCIONANDO:
+1) REEMPLAZAR public/index.html
+2) REEMPLAZAR api/report.js
+3) REEMPLAZAR api/index.js (recomendado para compatibilidad con Code.gs V4.7)
+4) Si Apps Script YA tiene Code.gs V4.7 publicado: CONSERVARLO; NO publicarlo otra vez.
+5) Si Apps Script SIGUE en V3.9: reemplazar por apps-script/Code.gs, ejecutar testFilialesV47, e IMPLEMENTAR NUEVA VERSIÓN.
+6) NO reemplazar .env.local, no publicar contraseñas, NO modificar Google Sheets ni sus fórmulas.
 
-SI QUIERES REEMPLAZAR TODA LA CARPETA:
-  1) Haz una copia de tu carpeta anterior.
-  2) Abre esta carpeta completa en Visual Studio Code.
-  3) Copia tu archivo .env.local anterior a la raíz de este proyecto (no viene en el ZIP).
-  4) npm install && npm run check && npm test && npm run dev
+SI QUIERES ABRIR EL PROYECTO COMPLETO:
+- Copiar tu .env.local anterior a la carpeta descargada.
+- npm install
+- npm run check
+- npm test
+- npm run dev
+- Comprobar grupo Filiales, empresas individuales, todos los cargos y descargas PDF/PPTX.
+- Desplegar en Vercel solo después de validar.
 
-El símbolo original a-color.png está incluido en assets/.
-El PDF/PPT usa el símbolo embebido en api/report.js, sin pedir archivos adicionales a Vercel.
-Google Apps Script V3.9 permanece IGUAL, sin publicar otra versión.
+V4.8 muestra el saldo grupal de Filiales como COMPARTIDO (no asignado a cada empresa).
+E = Estado de postulación; A = Estado del beneficio; B = Interno, excluido.
+No copia cifras históricas del PDF ejemplo Transportes Vigía 2026-II.

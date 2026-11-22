@@ -1,0 +1,9 @@
+EDUCAMÁS V4.9 — EMBUDO DE CONVOCATORIA
+Referencia: informe Transportes Vigía 2026-II, páginas 2, 5, 11 y 12.
+Cambios:
+• Convocatoria: Inscritos y preaprobaciones Educamás.
+• Embudo: Inscritos con beneficio activo, Preaprobaciones Educamás, Aprobados / documentación completa sin pago, Matrículas pagadas.
+• Novedades aparte: Inscritos pendientes de preaprobación, No cumplen requisitos del fondo, Retiro de la empresa, Retiro del programa, Graduación, Registro/pre-registro y Aplicará a 2027-II.
+• Precisión: E=Pagado no es matrícula académica certificada; A=no cumple requisitos no prueba causa antigüedad.
+• No hay cambios en conteos, importes, API, Apps Script V4.7 o Google Sheets.
+Reemplazar solo public/index.html + api/report.js en el proyecto web V4.8.
