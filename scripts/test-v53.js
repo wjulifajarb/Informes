@@ -47,6 +47,6 @@ const cartera=model.pages.find(p=>p.kind==='portfolio');
 assert(cartera.leftRows.some(r=>r[0]==='Indicador de cartera recuperada'&&r[1]==='50%'));
 assert(!cartera.rightTitle,'Sin panel de acuerdos en el archivo exportado');
 const raw=fs.readFileSync(path.join(base,'apps-script/Code.gs'),'utf8');
-assert(/const API_VERSION = '5\.3\.[01]';/.test(raw));assert(raw.includes('financialRows'));assert(raw.includes('getDisplayValues'));
+assert(/const API_VERSION = '5\.3\.\d+';/.test(raw));assert(raw.includes('financialRows'));assert(raw.includes('getDisplayValues'));
 const server=fs.readFileSync(path.join(base,'api/index.js'),'utf8');assert(server.includes("startsWith('5.3.')"));
 console.log('V5.3 OK: etiquetas de Sheets, cifras financieras completas, simulación BI/BU incl. pagados, falta de valores, desglose por empresa, descarga nominal.');

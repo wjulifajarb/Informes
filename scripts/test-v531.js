@@ -41,6 +41,6 @@ assert.equal(complete.tuition,1250);assert.equal(complete.fees,200);assert.equal
 const gs=fs.readFileSync(path.join(root,'apps-script/Code.gs'),'utf8');
 assert(gs.includes('capacityDebt:63'));
 assert(gs.includes('debtCapacity:n(POS.capacityDebt)'));
-assert(gs.includes("const API_VERSION = '5.3.1'"));
+assert(/const API_VERSION = '5\.3\.\d+'/.test(gs));
 const api=fs.readFileSync(path.join(root,'api/index.js'),'utf8');assert(api.includes("startsWith('5.3.')"));
 console.log('V5.3.1 OK: preaprobados/casos con checkbox, pagos BI/BU + fee automáticos, BL visible, estados BM BN BO, sin cambios al resto.');

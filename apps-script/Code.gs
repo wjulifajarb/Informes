@@ -5,7 +5,7 @@
  * SOLO LECTURA. Nunca modifica los datos ni las fórmulas del libro.
  * El token permanece en las Propiedades del script: API_TOKEN.
  */
-const API_VERSION = '5.3.1';
+const API_VERSION = '5.3.3';
 const CFG = {
   id:'1TkVBmU6NOCVpPkSdAUpXeUREAclVdWQnquJNh7y-bZE',
   sheet:'Financiero2027-1', period:'2027-1', refresh:60
@@ -213,10 +213,22 @@ function getData_(ss){const source=ss.getSheetByName(CFG.sheet);if(!source)throw
   ...f};
  return result;
 }
-function getScope_(ss,name){const cfg=discover_(ss).find(x=>x.name===name);if(!cfg||!cfg.hasStudents)throw Error('La empresa no tiene hoja Estudiantes-* vinculada');
+function getScope_(ss,name){const cfg=discover_(ss).find(x=>norm_(x.name)===norm_(name));if(!cfg||!cfg.hasStudents)throw Error('La empresa no tiene hoja Estudiantes-* vinculada');
+ const all=readPeople_(ss.getSheetByName(CFG.sheet)).rows;
+ // F: empresa/fondo principal; G: filial o vacío si la empresa es independiente.
+ const childParents=[...new Set(all.filter(r=>norm_(r.company)===norm_(cfg.name)&&norm_(r.group)!==norm_(cfg.name)).map(r=>r.group))];
+ if(childParents.length>1)throw Error('Filial asociada a varios grupos: '+cfg.name);
+ const scopeGroup=childParents[0]||cfg.name,scopeCompany=childParents.length?cfg.name:'';
+ const belongs=r=>norm_(r.group)===norm_(scopeGroup)&&(!scopeCompany||norm_(r.company)===norm_(scopeCompany));
  const sh=ss.getSheetByName(cfg.students),p=readPeople_(sh),projection=readProjection_(ss,cfg);
- return {name:cfg.name,studentsSheet:cfg.students,projectionSheet:cfg.projection,
-  rows:p.rows,allRows:p.allRows,headers:p.headers,rawCount:p.rawCount,duplicates:p.duplicates,
+ // Si la hoja derivada mezcla empresas, no incluirlas en la API ni en los CSV.
+ const validKeys=new Set(all.filter(belongs).map(r=>r.key));
+ const rows=p.rows.filter(r=>belongs(r)&&validKeys.has(r.key));
+ const kept=new Set(rows.map(r=>r.key));
+ const allRows=p.allRows.filter(r=>kept.has(r.key));
+ return {name:cfg.name,scopeGroup,scopeCompany,scopeType:scopeCompany?'filial':'empresa-o-fondo',
+  studentsSheet:cfg.students,projectionSheet:cfg.projection,
+  rows,allRows,headers:p.headers,rawCount:allRows.length,duplicates:p.duplicates.filter(d=>belongs(d)),
   projection,updated:new Date().toISOString()};
 }
 function testConnection(){const ss=ss_(),d=getData_(ss);console.log(JSON.stringify({version:d.apiVersion,source:d.source,

@@ -1,39 +1,37 @@
-# EDUCAMÁS 2027-I · V5.3.2 — ajuste puntual
+# Educamás · Informe dinámico 2027-I · versión 5.3.4
 
-## Qué se corrigió
+**Alcance confirmado — grupo, empresa o global.** Esta entrega corrige exclusivamente el flujo de selección del HTML. No reescribe el Google Sheets, no modifica sus fórmulas ni requiere una nueva publicación de Apps Script si ya funciona V5.3.3.
 
-1. **Capacidad de endeudamiento (BL)** se muestra como porcentaje en la tabla del simulador HTML. Google Sheets almacena el dato como proporción: `0,0696969697` corresponde a `6,97 %`. No se usa como dinero ni participa en la suma.
-2. **Solamente en PDF y PowerPoint** dejan de generarse estas secciones:
-   - `Cuotas y acuerdos 2027-I` (panel lateral de cartera).
-   - `Detalle financiero completo`.
-   - `Selección de estudiantes · escenario local`.
-   - `Acuerdos de pago 2027-I`.
-   - `ANEXO · Estudiantes y estado actual`.
-3. La **cartera oficial** permanece en la descarga y su tabla se muestra a ancho completo.
-4. **Sin cambios** en navegación, datos, filtros, detalle financiero completo de la plataforma, selección de estudiantes, pagos BI/BU, fee, fondos y simulador HTML.
+## Selección de alcance
 
-## ÚNICOS DOS ARCHIVOS QUE DEBES REEMPLAZAR EN VS CODE
+- **Consolidado global:** «Grupo / empresa → Consolidado global · todas las empresas» y pulsar «Confirmar empresa / grupo», o «Restablecer filtros».
+- **Todo un grupo:** elegir, por ejemplo, «Grupo Falic» y dejar «Empresa dentro del grupo → Todo el grupo»; confirmar. Incluye las personas del grupo, pero toma el saldo del fondo principal una sola vez.
+- **Empresa / filial:** elegir el grupo principal y después la empresa concreta; confirmar. El informe, las tablas y las descargas muestran solo esa empresa y su propia proyección.
+- **Empresa independiente:** elegir la empresa en el primer selector; el segundo se deshabilita y no se asigna un grupo artificial.
 
-| Archivo de esta entrega | Ubicación en tu proyecto |
+Al cambiar un selector, la vista confirmada **no cambia** hasta pulsar «Confirmar empresa / grupo». Mientras exista una nueva selección sin confirmar, las descargas se deshabilitan. El indicador «Alcance confirmado» deja claro qué empresa o grupo está representado.
+
+**Se conserva** la vista de estudiantes, el embudo, la continuidad, las finanzas, los escenarios BI/BU y fee, el porcentaje BL, la cartera, los CSV, PDF/PPTX, los filtros de estado y el estilo responsive. La descarga usa la misma selección confirmada que la plataforma.
+
+## Reemplazar
+
+| Archivo del ZIP | Destino |
 | --- | --- |
-| `Informe_Educamas_2027I_V532.html` | `public/index.html` |
-| `Exportador_Educamas_2027I_V532.js` | `api/report.js` |
+| `public/index.html` | `public/index.html` del proyecto actual en VS Code/Vercel |
 
-Estos mismos archivos ya están con sus nombres de proyecto dentro del ZIP en `public/index.html` y `api/report.js`.
+**Los demás archivos se incluyen por comodidad, pero no requieren reemplazo** si ya se instaló la V5.3.3: `apps-script/Code.gs`, `api/index.js`, `api/report.js`, `server.js`, `vercel.json`. No sobrescribir `.env.local`.
 
-### NO es necesario reemplazar
+## Verificar
 
-- `apps-script/Code.gs` / Google Apps Script (el valor porcentual BL ya se lee correctamente).
-- `api/index.js`, `server.js`, `vercel.json`, `.env.local`.
-- Ningún archivo ni fórmula del Google Sheets.
+```bash
+npm ci
+npm run check
+npm test
+npm run dev
+```
 
-## Validación y publicación
+Probar las cuatro opciones (global, grupo, filial y empresa independiente) y el comportamiento antes/después de confirmar. Las pruebas locales incluyen escritorio de 1440 px y móvil de 390 px, sin desbordamiento horizontal.
 
-1. Haz una copia de seguridad de los dos archivos actuales.
-2. Reemplaza los dos archivos en VS Code.
-3. Desde la raíz del proyecto, ejecuta `npm run check` y `npm test`.
-4. Publica la actualización en Vercel.
-5. En la aplicación, abre Simulador y confirma que **Capacidad de endeudamiento** muestra `%` y no `$`.
-6. Descarga un PDF y un PowerPoint por empresa y confirma que los cinco apartados solicitados ya no aparecen.
+## Limitaciones
 
-**Nota:** no se requieren nuevas implementaciones de Google Apps Script ni cambios de tokens; esta actualización es de presentación y exportación. El proyecto ZIP trae el resto del código anterior únicamente para facilitar una instalación completa, pero no debes sobrescribir credenciales privadas ni cambiar la API si tu versión V5.3.1 ya está funcionando.
+Esta versión es un archivo listo para publicar, no una publicación en tu Vercel. La verificación de datos conectados se limita a la estructura de la versión previa y las pruebas locales; debes probar un informe real una vez realizado el despliegue.

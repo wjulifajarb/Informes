@@ -1,42 +1,27 @@
-# EDUCAMÁS · V5.3.2 (ajuste puntual)
+# Educamás · Informe dinámico 2027-I · versión 5.3.4
 
-- Capacidad de endeudamiento (BL) se presenta como porcentaje (0,0697 → 6,97 %), sin convertirlo a pesos ni modificar los datos.
-- En PDF/PPTX se omiten: Cuotas y acuerdos, Detalle financiero completo, Selección de estudiantes de escenario local, Acuerdos de pago y ANEXO de estudiantes y estado.
-- La plataforma HTML conserva todas las pestañas, filtros, detalle financiero, simulador nominal y tablas.
-- El Estado de cartera 2026-II se imprime a ancho completo.
-- No necesita actualización de Apps Script ni de la API; únicamente `public/index.html` y `api/report.js`.
-- Copia siempre `.env.local` desde tu proyecto existente; no se incluye en este ZIP.
+**Alcance confirmado — grupo, empresa o global.** Esta entrega corrige exclusivamente el flujo de selección del HTML. No reescribe el Google Sheets, no modifica sus fórmulas ni requiere una nueva publicación de Apps Script si ya funciona V5.3.3.
 
-# Educamás 2027-I — ajuste puntual del simulador V5.3.1
+## Selección de alcance
 
-Esta entrega parte de la versión **5.3** que ya tiene conexión a `Financiero2027-1` y a las 19 parejas `Estudiantes-[Empresa]` y `Proye-[Empresa]`.
+- **Consolidado global:** «Grupo / empresa → Consolidado global · todas las empresas» y pulsar «Confirmar empresa / grupo», o «Restablecer filtros».
+- **Todo un grupo:** elegir, por ejemplo, «Grupo Falic» y dejar «Empresa dentro del grupo → Todo el grupo»; confirmar. Incluye las personas del grupo, pero toma el saldo del fondo principal una sola vez.
+- **Empresa / filial:** elegir el grupo principal y después la empresa concreta; confirmar. El informe, las tablas y las descargas muestran solo esa empresa y su propia proyección.
+- **Empresa independiente:** elegir la empresa en el primer selector; el segundo se deshabilita y no se asigna un grupo artificial.
 
-## Solo debes reemplazar dos archivos
+Al cambiar un selector, la vista confirmada **no cambia** hasta pulsar «Confirmar empresa / grupo». Mientras exista una nueva selección sin confirmar, las descargas se deshabilitan. El indicador «Alcance confirmado» deja claro qué empresa o grupo está representado.
 
-| Ubicación | Cambio | ¿Reemplazar? |
-|---|---|---|
-| `apps-script/Code.gs` | Incluye en la API el campo **Capacidad de endeudamiento** de la columna **BL** (`debtCapacity`). No cambia hojas ni fórmulas. | **Sí**. Publica una **nueva versión de la misma implementación** `/exec` de Apps Script. |
-| `public/index.html` | Ajusta únicamente el simulador y la tabla de estudiantes. | **Sí**. Publica la nueva web en Vercel. |
-| `api/index.js` | Mantiene la API y su control `5.3.*`, que acepta `5.3.1`. | No, conservar el existente. |
-| `api/report.js` | Mantiene PDF y PPTX de V5.3. | No, conservar el existente. |
-| `server.js`, `vercel.json`, `.env.local` | Sin cambios. | No. |
+**Se conserva** la vista de estudiantes, el embudo, la continuidad, las finanzas, los escenarios BI/BU y fee, el porcentaje BL, la cartera, los CSV, PDF/PPTX, los filtros de estado y el estilo responsive. La descarga usa la misma selección confirmada que la plataforma.
 
-### Criterios de simulación
+## Reemplazar
 
-- **BM / Aprobación EducaMas:** preaprobados y casos especiales aparecen con casillas seleccionables.
-- **BN / Estado Aprobacion Empresa:** se muestra el estado exacto y se pueden seleccionar también los ya aprobados no pagados.
-- **BO / Status Final:** si `Pagado`, la persona está **incluida automáticamente** en el escenario y no puede desmarcarse.
-- **BI / Valor a Financiar:** valor que se suma si la persona está pendiente y es seleccionada.
-- **BL / Capacidad de endeudamiento:** valor mostrado en la lista para facilitar la decisión; **no se suma** a las matrículas.
-- **BU / Vr. Final pago matricula:** valor que se suma si `Status Final=Pagado`; no se sustituye por BI si falta.
-- **Tarifa administrativa:** se toma de la hoja `Proye-[Empresa]` de cada persona, una vez por persona incluida, también para los pagados. El escenario local puede usar el valor opcional de tarifa ingresado por el usuario, igual que antes.
-- **Limpiar selección pendiente:** quita únicamente selecciones manuales y conserva a todos los pagados.
-- El simulador utiliza el universo del grupo/empresa seleccionado, aunque los filtros de caracterización excluyan pagos. No altera el Google Sheets ni la proyección oficial.
-- Los datos monetarios vacíos se muestran como **Pendiente**; no se imputan cifras.
+| Archivo del ZIP | Destino |
+| --- | --- |
+| `public/index.html` | `public/index.html` del proyecto actual en VS Code/Vercel |
 
-## Pruebas locales
+**Los demás archivos se incluyen por comodidad, pero no requieren reemplazo** si ya se instaló la V5.3.3: `apps-script/Code.gs`, `api/index.js`, `api/report.js`, `server.js`, `vercel.json`. No sobrescribir `.env.local`.
 
-Ejecuta en la carpeta del proyecto:
+## Verificar
 
 ```bash
 npm ci
@@ -45,13 +30,8 @@ npm test
 npm run dev
 ```
 
-Incluye prueba específica `scripts/test-v531.js` para verificar las casillas, los pagos automáticos, la lectura BL y los cálculos BI/BU con fee. Las capturas incluidas en la entrega se generaron con datos sintéticos de demostración, no con datos personales reales.
+Probar las cuatro opciones (global, grupo, filial y empresa independiente) y el comportamiento antes/después de confirmar. Las pruebas locales incluyen escritorio de 1440 px y móvil de 390 px, sin desbordamiento horizontal.
 
-## Instalación
+## Limitaciones
 
-1. Abre el Apps Script en producción. Reemplaza el código completo de `Code.gs` y publica **Implementar → Administrar implementaciones → Editar → Nueva versión**. Conserva el `API_TOKEN` existente en Propiedades del script. No publiques ni envíes tus secretos.
-2. En el proyecto de Visual Studio Code reemplaza `public/index.html` por el archivo incluido.
-3. Conserva `api/index.js`, `api/report.js` y `.env.local` sin cambios; publica la web con el mismo procedimiento que utilizas para Vercel.
-4. Abre la empresa que quieras, entra al simulador y compara BI, BL, BU y fee con la hoja `Estudiantes-[Empresa]` y `Proye-[Empresa]` correspondientes.
-
-**No se modificó Google Sheets.** El equipo debe verificar los datos reales después del despliegue; las pruebas de esta entrega fueron locales con datos de ejemplo.
+Esta versión es un archivo listo para publicar, no una publicación en tu Vercel. La verificación de datos conectados se limita a la estructura de la versión previa y las pruebas locales; debes probar un informe real una vez realizado el despliegue.

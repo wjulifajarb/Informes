@@ -103,15 +103,24 @@ th{font-size:clamp(.78rem,.87vw,.92rem)}
 .simulator .mini .sim-fixed{font-size:.72rem;font-weight:700;color:#256f44;display:block;margin-top:4px;white-space:nowrap}
 .simulator .mini th{white-space:normal;line-height:1.25}
 @media(max-width:760px){.simulator .mini table{font-size:.78rem}.simulator .mini th,.simulator .mini td{padding:8px 7px}}
+
+/* Selector de alcance explícito: la plataforma y el reporte usan la selección CONFIRMADA. */
+.scope-confirm{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-top:16px;padding:13px 15px;background:#fff9e3;border:1px solid #eddd9d;border-radius:12px}
+.scope-copy{display:flex;flex-direction:column;gap:5px;min-width:180px;flex:1}
+.scope-copy strong{font-size:13px;color:#23241f}.scope-copy span{font-size:12px;color:#626355}
+.scope-confirm.pending{border-color:#e4b000;background:#fff0ba}
+.scope-confirm.pending .scope-copy strong{color:#775200}
+.scope-confirm .btn{white-space:normal;flex-shrink:0}
+@media(max-width:620px){.scope-confirm{align-items:stretch}.scope-confirm .btn{width:100%}}
 </style></head>
 <body>
 <a class="skip" href="#main">Ir al contenido</a>
 <div id="login" class="loginbg"><form class="login" id="loginForm"><div class="brand"><span class="mark">E</span> EDUCAMÁS</div><h1>Control de Innovación · Fondo educativo</h1><p class="muted">Informe protegido de la convocatoria 2027-I. Acceso exclusivo de personal autorizado.</p><label for="password">Contraseña de acceso</label><input id="password" type="password" autocomplete="current-password" required minlength="1" placeholder="Contraseña"><button class="btn primary" type="submit">Entrar al informe</button><p id="loginError" class="negative" role="alert"></p></form></div>
 <div id="app" class="hidden"><header class="top"><div class="brand"><span class="mark">E</span><span>EDUCAMÁS <small> · 2027-I</small></span></div><div class="topright"><small id="sync">Sin actualizar</small><button class="btn" id="refreshBtn">Actualizar</button><button class="btn" id="logoutBtn">Salir</button></div></header>
 <div class="layout"><aside class="side" aria-label="Navegación del informe"><div class="nav-title">NAVEGACIÓN</div><a href="#resumen">Resumen ejecutivo</a><a href="#perfil">Caracterización</a><a href="#novedades">Antiguos y novedades</a><a href="#embudo">Embudo de seguimiento</a><a href="#finanzas">Fondos y proyecciones</a><a href="#pagos">Pagos y acuerdos</a><a href="#cartera">Cartera</a><a href="#simulador">Simulador</a><a href="#detalle">Detalle nominal</a><a href="#descargas">Descargas</a></aside>
-<main class="content" id="main"><div class="hero"><div><div class="eyebrow">Educamás · informe dinámico</div><h1>Fondo educativo <span class="nowrap">2027-I</span></h1><p id="scopeDescription">Resumen general · registros y finanzas desde el Google Sheets oficial.</p></div><div class="actions"><button class="btn primary" id="quickPdf">PDF de esta vista</button><button class="btn dark" id="quickPpt">PowerPoint</button><button class="btn" id="quickAll">PDF consolidado</button></div></div>
+<main class="content" id="main"><div class="hero"><div><div class="eyebrow">Educamás · informe dinámico</div><h1>Fondo educativo <span class="nowrap">2027-I</span></h1><p id="scopeDescription">Resumen general · registros y finanzas desde el Google Sheets oficial.</p></div><div class="actions"><button class="btn primary" id="quickPdf">PDF de esta vista</button><button class="btn dark" id="quickPpt">PowerPoint</button><button class="btn" id="quickAll">PDF del alcance</button></div></div>
 <div id="error" class="notice error hidden" role="alert"></div>
-<div class="card filtercard"><div class="section-head"><div><div class="eyebrow">Explorar resultados</div><strong>Filtros de la convocatoria</strong></div><button class="btn" id="clearFilters">Restablecer filtros</button></div><div class="filters"><div class="filtercell"><label for="group">Empresa / fondo</label><select id="group"><option value="">Todas las empresas</option></select></div><div class="filtercell"><label for="company">Filial / subgrupo</label><select id="company"><option value="">Todas las filiales</option></select></div><div class="filtercell"><label for="type">Antiguo / nuevo</label><select id="type"><option value="">Ambos</option></select></div><div class="filtercell"><label for="relation">Vínculo</label><select id="relation"><option value="">Empleados y familiares</option></select></div><div class="filtercell"><label for="stage">Etapa</label><select id="stage"><option value="">Todas las etapas</option></select></div><div class="filtercell"><label for="role">Cargo (empleado/acudiente)</label><select id="role"><option value="">Todos los cargos</option></select></div><div class="filtercell"><label for="studentStatus">Estado del estudiante</label><select id="studentStatus"><option value="">Todos los estados</option></select></div><div class="filtercell"><label for="situation">Continuidad 2027-I</label><select id="situation"><option value="">Todas las situaciones</option></select></div><div class="filtercell"><label for="educationApproval">Aprobación EducaMas</label><select id="educationApproval"><option value="">Todas las preaprobaciones</option></select></div><div class="filtercell"><label for="companyApproval">Estado Aprobacion Empresa</label><select id="companyApproval"><option value="">Todas las aprobaciones</option></select></div><div class="filtercell"><label for="paymentStatus">Status Final</label><select id="paymentStatus"><option value="">Todos los estados de pago</option></select></div><div class="filtercell search"><label for="search">Buscar por estudiante, empresa, programa o cargo</label><input id="search" type="search" placeholder="Escribe para filtrar el detalle…"></div></div></div>
+<div class="card filtercard"><div class="section-head"><div><div class="eyebrow">Explorar resultados</div><strong>Filtros de la convocatoria</strong></div><button class="btn" id="clearFilters">Restablecer filtros</button></div><div class="filters"><div class="filtercell"><label for="group">Grupo / empresa</label><select id="group"><option value="">Todas las empresas</option></select></div><div class="filtercell"><label for="company">Empresa dentro del grupo</label><select id="company"><option value="">Todas las filiales</option></select></div><div class="filtercell"><label for="type">Antiguo / nuevo</label><select id="type"><option value="">Ambos</option></select></div><div class="filtercell"><label for="relation">Vínculo</label><select id="relation"><option value="">Empleados y familiares</option></select></div><div class="filtercell"><label for="stage">Etapa</label><select id="stage"><option value="">Todas las etapas</option></select></div><div class="filtercell"><label for="role">Cargo (empleado/acudiente)</label><select id="role"><option value="">Todos los cargos</option></select></div><div class="filtercell"><label for="studentStatus">Estado del estudiante</label><select id="studentStatus"><option value="">Todos los estados</option></select></div><div class="filtercell"><label for="situation">Continuidad 2027-I</label><select id="situation"><option value="">Todas las situaciones</option></select></div><div class="filtercell"><label for="educationApproval">Aprobación EducaMas</label><select id="educationApproval"><option value="">Todas las preaprobaciones</option></select></div><div class="filtercell"><label for="companyApproval">Estado Aprobacion Empresa</label><select id="companyApproval"><option value="">Todas las aprobaciones</option></select></div><div class="filtercell"><label for="paymentStatus">Status Final</label><select id="paymentStatus"><option value="">Todos los estados de pago</option></select></div><div class="filtercell search"><label for="search">Buscar por estudiante, empresa, programa o cargo</label><input id="search" type="search" placeholder="Escribe para filtrar el detalle…"></div></div><div class="scope-confirm" aria-live="polite"><div class="scope-copy"><strong id="scopeStatus">Alcance confirmado: Consolidado global · todas las empresas</strong><span id="scopeHelp">Selecciona un grupo o empresa; después pulsa Confirmar empresa / grupo para aplicar la selección.</span></div><button class="btn primary" id="scopeConfirm" type="button">Confirmar empresa / grupo</button></div></div>
 <section id="resumen" class="section"><div class="section-head"><div><div class="eyebrow">01 / PANORAMA</div><h2>Resumen ejecutivo</h2></div><span id="universeNote" class="cohort-summary"></span></div><div class="kpis" id="summaryKpis"></div><div class="hidden" id="dataWarning"></div></section>
 <section id="perfil" class="section"><div class="section-head"><div><div class="eyebrow">02 / PERSONAS</div><h2>Caracterización</h2></div></div><div class="cols3"><div class="card"><h3>Antiguos y nuevos</h3><div id="typesChart"></div></div><div class="card"><h3>Empleados y familiares</h3><div id="relationChart"></div></div><div class="card"><h3>Cargos registrados</h3><div id="roleChart"></div></div></div><div class="cols2" style="margin-top:12px"><div class="card"><h3>Motivaciones</h3><div id="motiveChart"></div></div><div class="card"><h3>Grupos y filiales</h3><div id="companiesChart"></div></div></div></section>
 <section id="novedades" class="section"><div class="section-head"><div><div class="eyebrow">03 / CONTINUIDAD</div><h2>Antiguos, graduaciones y novedades</h2></div></div><div class="kpis" id="oldKpis"></div><div class="card" style="margin-top:12px"><h3>Comparativo de antiguos · 2026-II → 2027-I</h3><div class="table-wrap" id="cohortTable"></div></div><div class="cols2" style="margin-top:12px"><div class="card"><h3>Estado de estudiantes antiguos</h3><div id="oldChart"></div></div><div class="card"><h3>Motivos de novedades / retiros</h3><div class="table-wrap" id="reasonTable"></div></div></div><div class="card" style="margin-top:12px"><h3>Detalle de antiguos y novedades</h3><div class="table-wrap" id="oldTable"></div></div></section>
@@ -120,8 +129,8 @@ th{font-size:clamp(.78rem,.87vw,.92rem)}
 <section id="pagos" class="section"><div class="section-head"><div><div class="eyebrow">06 / APROBACIÓN Y PAGO</div><h2>Pagos, descuentos y recuperación proyectada</h2></div></div><div class="kpis" id="paidKpis"></div><div class="card" style="margin-top:12px"><h3>Matrículas con pago registrado</h3><div class="table-wrap" id="paymentTable"></div></div><div class="card" style="margin-top:12px"><h3>Acuerdos e información de descuentos por nómina</h3><div class="table-wrap" id="installmentTable"></div></div></section>
 <section id="cartera" class="section"><div class="section-head"><div><div class="eyebrow">07 / CARTERA Y RECUPERACIÓN</div><h2>Cartera 2026-II y saldos</h2></div></div><div class="kpis" id="portfolioKpis"></div><div class="card" style="margin-top:12px"><div class="table-wrap" id="portfolioTable"></div></div></section>
 <section id="simulador" class="section"><div class="section-head"><div><div class="eyebrow">08 / ESCENARIOS</div><h2>Simulación con aprobación final empresa</h2></div><span class="subtle">No altera Sheets</span></div><div class="card simulator"><div><div class="sticky-actions"><button class="btn" id="selectPre">Seleccionar aprobados por empresa</button><button class="btn" id="selectAll">Seleccionar preaprobados y casos especiales</button><button class="btn" id="selectNone">Limpiar selección pendiente</button></div><div class="mini table-wrap" id="simPeople"></div><div id="simSelectionHint" class="sim-hint" aria-live="polite"></div></div><div><div class="twofig"><div class="filtercell"><label for="simCash">Fondo del escenario (COP, opcional)</label><input id="simCash" inputmode="decimal" type="number" min="0" step="any" placeholder="Fondo disponible" style="width:100%"></div><div class="filtercell"><label for="simFee">Tarifa por persona (COP, opcional)</label><input id="simFee" inputmode="decimal" type="number" min="0" step="any" placeholder="Tarifa administrativa" style="width:100%"></div></div><div class="kpis" id="simKpis" style="margin-top:14px"></div></div></div></section>
-<section id="detalle" class="section"><div class="section-head"><div><div class="eyebrow">09 / ANEXO NOMINAL</div><h2>Detalle nominal de estudiantes</h2></div><div class="download-menu"><button class="btn" id="csvFiltered">CSV · filtrado</button><button class="btn" id="csvAll">CSV · total</button></div></div><div class="card"><div class="datafoot"><div class="subtle" id="detailCount"></div><div class="sticky-actions"><button class="btn" id="prev">Anterior</button><span id="pageCaption">Página 1</span><button class="btn" id="next">Siguiente</button></div></div><div class="table-wrap"><div id="peopleTable"></div></div></div><details class="card detail" style="margin-top:12px"><summary>Ver todos los campos públicos de Financiero2027-1</summary><div class="datafoot"><button class="btn" id="csvRaw">CSV de columnas públicas</button><span class="subtle" id="rawCount"></span></div><div class="table-wrap"><div id="rawTable"></div></div></details></section>
-<section id="descargas" class="section"><div class="section-head"><div><div class="eyebrow">10 / INFORMES</div><h2>Descargas individuales y consolidadas</h2></div></div><div class="card"><div class="download-menu"><button class="btn primary" id="pdfScope">PDF · alcance actual</button><button class="btn dark" id="pptScope">PPT · alcance actual</button><button class="btn" id="pdfGlobal">PDF · consolidado total</button><button class="btn" id="pptGlobal">PPT · consolidado total</button><button class="btn" id="csvFinance">CSV financiero</button><button class="btn" id="previewBtn">Vista previa</button></div><div id="previewPanel" class="table-wrap hidden" style="margin-top:14px;max-height:420px;overflow:auto"></div><div id="exportMsg" class="note" role="status"></div></div></section>
+<section id="detalle" class="section"><div class="section-head"><div><div class="eyebrow">09 / ANEXO NOMINAL</div><h2>Detalle nominal de estudiantes</h2></div><div class="download-menu"><button class="btn" id="csvFiltered">CSV · filtrado</button><button class="btn" id="csvAll">CSV · todo el alcance</button></div></div><div class="card"><div class="datafoot"><div class="subtle" id="detailCount"></div><div class="sticky-actions"><button class="btn" id="prev">Anterior</button><span id="pageCaption">Página 1</span><button class="btn" id="next">Siguiente</button></div></div><div class="table-wrap"><div id="peopleTable"></div></div></div><details class="card detail" style="margin-top:12px"><summary>Ver todos los campos públicos de Financiero2027-1</summary><div class="datafoot"><button class="btn" id="csvRaw">CSV de columnas públicas</button><span class="subtle" id="rawCount"></span></div><div class="table-wrap"><div id="rawTable"></div></div></details></section>
+<section id="descargas" class="section"><div class="section-head"><div><div class="eyebrow">10 / INFORMES</div><h2>Descargas individuales y consolidadas</h2></div></div><div class="card"><div class="download-menu"><button class="btn primary" id="pdfScope">PDF · alcance actual</button><button class="btn dark" id="pptScope">PPT · alcance actual</button><button class="btn" id="pdfGlobal">PDF · consolidar selección</button><button class="btn" id="pptGlobal">PPT · consolidar selección</button><button class="btn" id="csvFinance">CSV financiero</button><button class="btn" id="previewBtn">Vista previa</button></div><div id="previewPanel" class="table-wrap hidden" style="margin-top:14px;max-height:420px;overflow:auto"></div><div id="exportMsg" class="note" role="status"></div></div></section>
 <footer class="foot">EDUCAMÁS · 2027-I</footer>
 </main></div></div>
 <script>
@@ -135,7 +144,7 @@ const percentage=(a,b)=>b>0?((100*a/b).toFixed(1).replace('.',',')+' %'):'—';
 // BL contiene una fracción (0,0697 = 6,97 %), no una cantidad en pesos.
 const capacityPercent=n=>typeof n==='number'&&Number.isFinite(n)?new Intl.NumberFormat('es-CO',{style:'percent',minimumFractionDigits:2,maximumFractionDigits:2}).format(n):'Pendiente';
 const keygroup=r=>r.group||'Sin grupo';
-let base=null,scopeData=null,loading=false,view=[],page=0,selection=new Set(),effectiveScope='',renderToken=0;
+let base=null,scopeData=null,loading=false,view=[],page=0,selection=new Set(),effectiveScope='',renderToken=0,confirmedGroup='',confirmedCompany='';
 const PER=24;
 async function api(action,params={}){const res=await fetch('/api/index',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({action,...params})});const j=await res.json().catch(()=>({ok:false,error:'Respuesta inválida del servidor'}));if(!res.ok||!j.ok)throw new Error(j.error||'Error de conexión');return j.data;}
 function error(message){$('error').textContent=message||'';$('error').classList.toggle('hidden',!message);}
@@ -143,14 +152,48 @@ function options(select,arr,placeholder){const old=select.value,items=[...new Se
 function classify(r){return r.stage||r.status||'Sin dato';}
 function groupOfProjection(p){return p.group||p.name;}
 function projections(){return base?.financialV34?.projections||[];}
-function groups(){return [...new Set((base?.rows||[]).map(r=>r.group).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'es'));}
-function currentCompany(){return $('company').value;}
-function currentGroup(){return $('group').value;}
+function groups(){const names=[...(base?.rows||[]).map(r=>r.group),...projections().filter(p=>p.isGroup).map(p=>p.group||p.name)];return [...new Set(names.filter(Boolean))].sort((a,b)=>a.localeCompare(b,'es'));}
+function currentCompany(){return confirmedCompany;}
+function currentGroup(){return confirmedGroup;}
+function draftGroup(){return $('group').value;}
+function draftCompany(){return $('company').value;}
 function currentScopeName(){return currentCompany()||currentGroup()||'';}
-function currentFinancial(){const f=projections(),g=currentGroup(),c=currentCompany();
- if(c)return f.filter(p=>norm(p.name)===norm(c));
- if(g)return f.filter(p=>p.isGroup&&norm(p.group)===norm(g));
- return f.filter(p=>p.isGroup);}
+function hasPendingScope(){return norm(draftGroup())!==norm(currentGroup())||norm(draftCompany())!==norm(currentCompany());}
+function scopeLabel(group,company){return company?`${group} · ${company}`:group?group:'Consolidado global · todas las empresas';}
+function updateScopeStatus(){
+ const pending=hasPendingScope(),confirm=$('scopeConfirm');
+ $('scopeStatus').textContent=pending?'Selección sin confirmar: '+scopeLabel(draftGroup(),draftCompany()):'Alcance confirmado: '+scopeLabel(currentGroup(),currentCompany());
+ $('scopeHelp').textContent=pending?'Pulsa «Confirmar empresa / grupo» para actualizar la plataforma y las descargas. La vista actual sigue mostrando el alcance anterior.':
+   currentCompany()?'Pantalla, informes y descargas: únicamente la empresa seleccionada.':currentGroup()?'Pantalla, informes y descargas: todo el grupo o empresa independiente.':'Pantalla e informes: consolidado global de todos los fondos principales.';
+ confirm.textContent=pending?'Confirmar empresa / grupo':currentScopeName()?'Alcance confirmado':'Vista global confirmada';
+ confirm.disabled=!pending;
+ confirm.closest('.scope-confirm')?.classList.toggle('pending',pending);
+ // No permitir descargar un alcance anterior mientras existe una selección nueva sin confirmar.
+ ['quickPdf','quickPpt','quickAll','pdfScope','pptScope','pdfGlobal','pptGlobal','csvFinance','csvFiltered','csvAll','csvRaw','previewBtn'].forEach(id=>{if($(id))$(id).disabled=pending;});
+}
+async function confirmScope(){
+ if(!base)return;
+ const group=draftGroup(),company=draftCompany();
+ if(company&&!group)throw Error('Debes escoger el grupo o empresa principal antes de escoger una filial.');
+ if(group&&!groups().some(g=>norm(g)===norm(group)))throw Error('El grupo seleccionado no existe en la fuente de datos.');
+ if(company&&!projections().some(p=>!p.isGroup&&norm(p.name)===norm(company)&&norm(p.group)===norm(group)))throw Error('La empresa no corresponde al grupo seleccionado.');
+ confirmedGroup=group;confirmedCompany=company;
+ scopeData=null;selection.clear();page=0;error('');updateScopeStatus();await sourceForScope();updateScopeStatus();
+}
+// La columna F es el fondo/empresa principal y G la filial, cuando existe.
+// Para una empresa independiente, F corresponde a esa empresa y G permanece vacía.
+function belongsToSelection(r,group=currentGroup(),company=currentCompany()){
+ return (!group||norm(r.group)===norm(group))&&(!company||norm(r.company)===norm(company));
+}
+function projectionInScope(p,group=currentGroup(),company=currentCompany()){
+ if(company)return norm(p.name)===norm(company)&&(!group||norm(p.group)===norm(group));
+ if(group)return p.isGroup&&norm(p.group)===norm(group);
+ return Boolean(p.isGroup);
+}
+function scopedFinancial(group=currentGroup(),company=currentCompany()){
+ return projections().filter(p=>projectionInScope(p,group,company));
+}
+function currentFinancial(){return scopedFinancial();}
 function financialForRow(r){let f=projections().find(p=>norm(p.name)===norm(r.company)&&norm(p.group)===norm(r.group));if(!f)f=projections().find(p=>p.isGroup&&norm(p.group)===norm(r.group));return f||null;}
 function filterByOptions(pool){
  const t=norm($('search').value),r=$('role').value,stage=$('stage').value;
@@ -160,11 +203,13 @@ function filterByOptions(pool){
   (!t||norm([x.name,x.doc,x.role,x.program,x.company,x.group,x.status,x.caseStatus].join(' ')).includes(t)));
 }
 function filteredPeople(){return filterByOptions(view);}
-function selectSource(){const c=currentCompany(),g=currentGroup();let f=base?.rows||[];
+function selectSource(){const c=currentCompany(),g=currentGroup(),f=base?.rows||[];
  if(!c&&!g)return f;
- // Se prioriza la hoja Estudiantes-[Empresa] real; respaldo desde Financiero si la hoja está ausente.
- if(scopeData&&scopeData.name===(c||g))return scopeData.rows||[];
- return f.filter(r=>(!g||norm(r.group)===norm(g))&&(!c||norm(r.company)===norm(c)));}
+ // Nunca presentar registros ajenos al fondo o filial elegidos, incluso ante una
+ // referencia incorrecta en Estudiantes-[Empresa] o un alcance desactualizado.
+ if(scopeData&&scopeData.name===(c||g))return (scopeData.rows||[]).filter(r=>belongsToSelection(r,g,c));
+ return f.filter(r=>belongsToSelection(r,g,c));
+}
 function kpis(target,values){$(target).innerHTML=values.map(([title,val,foot,hi])=>`<div class="kpi ${hi?'em':''}"><span>${safe(title)}</span><strong>${safe(val)}</strong><small>${safe(foot||'')}</small></div>`).join('');}
 function table(target,headers,rows,empty='Sin registros en el alcance seleccionado'){if(!rows.length){$(target).innerHTML=`<div class="empty">${safe(empty)}</div>`;return;}
  $(target).innerHTML=`<table><thead><tr>${headers.map(h=>`<th>${safe(h)}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr>${r.map(v=>`<td>${safe(v??'—')}</td>`).join('')}</tr>`).join('')}</tbody></table>`;}
@@ -188,7 +233,7 @@ function metric(people){
   oldGrads:old.filter(x=>x.graduated).length,oldRetired:old.filter(x=>x.retired).length,
   oldPreReg:old.filter(x=>!x.registered&&!x.graduated&&!x.retired).length};
 }
-function prepareSelects(){if(!base)return;options($('group'),groups(),'Todos los fondos');buildCompany();
+function prepareSelects(){if(!base)return;options($('group'),groups(),'Consolidado global · todas las empresas');buildCompany();
  const people=base.rows||[];
  options($('type'),people.map(r=>r.type),'Antiguos y nuevos');
  options($('relation'),people.map(r=>r.relation),'Empleados y familiares');
@@ -200,16 +245,27 @@ function prepareSelects(){if(!base)return;options($('group'),groups(),'Todos los
  options($('companyApproval'),people.map(r=>r.approvalCompany),'Todas las aprobaciones');
  options($('paymentStatus'),people.map(r=>r.finalStatus),'Todos los estados de pago');
 }
-function buildCompany(){const g=currentGroup(),xs=(base?.rows||[]).filter(x=>!g||x.group===g).map(x=>x.company).filter(x=>!g||norm(x)!==norm(g));options($('company'),xs,'Todas las filiales');}
-async function sourceForScope(){const name=currentScopeName(),token=++renderToken;scopeData=null;view=selectSource();render();
- if(!name||!(base.scopes||[]).some(s=>s.name===name&&s.hasStudents))return;
+function buildCompany(){const g=draftGroup();
+ const fromStudents=(base?.rows||[]).filter(x=>g&&norm(x.group)===norm(g)&&norm(x.company)!==norm(g)).map(x=>x.company);
+ const fromProjections=projections().filter(p=>g&&!p.isGroup&&norm(p.group)===norm(g)).map(p=>p.name);
+ const subsidiaries=[...new Set([...fromStudents,...fromProjections])];
+ options($('company'),subsidiaries,!g?'Elige grupo o empresa':subsidiaries.length?'Todo el grupo':'Empresa independiente · solo esta empresa');
+ $('company').disabled=!subsidiaries.length;
+}
+async function sourceForScope(){const name=currentScopeName(),group=currentGroup(),company=currentCompany(),token=++renderToken;
+ scopeData=null;view=selectSource();render();
+ if(!name||!(base.scopes||[]).some(s=>norm(s.name)===norm(name)&&s.hasStudents))return;
  try{const result=await api('scope',{scope:name});if(token!==renderToken)return;
-   scopeData=result;view=selectSource();render();}
- catch(e){if(token===renderToken)error('Vista por empresa: '+e.message+' (se muestran los datos filtrados del consolidado).');}}
+   if(result.scopeGroup&&group&&norm(result.scopeGroup)!==norm(group))throw Error('La hoja de estudiantes pertenece a otro fondo');
+   if(result.scopeCompany&&company&&norm(result.scopeCompany)!==norm(company))throw Error('La hoja de estudiantes pertenece a otra filial');
+   if((result.rows||[]).some(r=>!belongsToSelection(r,group,company)))throw Error('La hoja de estudiantes contiene personas de otro fondo o filial');
+   scopeData=result;view=selectSource();render();
+ }catch(e){if(token===renderToken)error('No se pudieron verificar los estudiantes de '+name+': '+e.message);}}
+
 function render(){if(!base)return;view=selectSource();
  const people=filteredPeople(),m=metric(people),baseline=metric(view),enrolled=people.filter(x=>x.registered);
  const g=currentGroup(),c=currentCompany();
- $('scopeDescription').textContent=c?`${g} · ${c}`:g?g:'Informe general · empresas y fondos';
+ $('scopeDescription').textContent=c?`${g} · ${c}`:g?g: 'Informe general · empresas y fondos';
  $('universeNote').textContent=`${number(baseline.registered)} inscritos 2027-I · ${number(baseline.old)} antiguos identificados 2026-II`;
  kpis('summaryKpis',[
   ['Inscritos 2027-I · universo',number(baseline.registered),'Denominador de convocatoria',true],
@@ -298,7 +354,7 @@ function renderFinance(){
   [financeLabel(p,28,'E'),money(scalar('feeFinal'))],
   [financeLabel(p,31,'E'),money(scalar('balanceAfterApproval'))]
  ]);
- const leaf=projections().filter(x=>!x.isGroup&&(!currentGroup()||norm(x.group)===norm(currentGroup()))&&(!currentCompany()||norm(x.company)===norm(currentCompany())));
+ const leaf=projections().filter(x=>!x.isGroup&&(!currentGroup()||norm(x.group)===norm(currentGroup()))&&(!currentCompany()||norm(x.name)===norm(currentCompany())));
  table('subsidiaryTable',['Fondo','Empresa / filial',financeLabel(p,24),financeLabel(p,27),financeLabel(p,27,'E'),financeLabel(p,28,'E'),financeLabel(p,31,'E')],leaf.map(x=>[x.group,x.name,number(x.base),money(x.tuitionBase),money(x.authorized),money(x.feeFinal),money(x.balanceAfterApproval)]),'No hay filiales adicionales en este alcance');
  table('financeTable',['Empresa / fondo',financeLabel(p,24),financeLabel(p,25),financeLabel(p,26),financeLabel(p,27),financeLabel(p,28),financeLabel(p,17),financeLabel(p,31,'E')],items.map(x=>[x.name,number(x.base),number(x.special),number(x.paidCount),money(x.tuitionBase),money(x.feeBase),money(x.cash),money(x.balanceAfterApproval)]));
  table('projectionTable',['Empresa / fondo',financeLabel(p,24,'E'),financeLabel(p,25,'E'),financeLabel(p,26,'E'),financeLabel(p,27,'E'),financeLabel(p,28,'E'),financeLabel(p,32,'E'),financeLabel(p,33,'E')],items.map(x=>[x.name,number(x.finalApproved),number(x.specialApproved),number(x.paidEarly),money(x.authorized),money(x.feeFinal),money(x.decemberForecast),money(x.decemberFinal)]));
@@ -374,11 +430,11 @@ function renderPeople(){const people=filteredPeople();page=Math.min(page,Math.ma
  table('rawTable',['Fila',...headers],raw.slice(page*PER,(page+1)*PER).map(x=>[x.row,...x.values]));}
 function csv(rows){return '\ufeff'+rows.map(row=>row.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(';')).join('\r\n');}
 function fileBlob(content,mime,name){const blob=new Blob([content],{type:mime}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),2000);}
-function exportPeople(all=false,raw=false){const source=all?base:(scopeData&&scopeData.name===currentScopeName()?scopeData:base);const rows=all?base.rows:filteredPeople();const scope=all?'Consolidado':currentScopeName()||'Global';const suffix=scope.replace(/[^a-z0-9\-]/gi,'_').slice(0,50);
+function exportPeople(all=false,raw=false){if(hasPendingScope()){error('Confirma el grupo y la empresa antes de descargar.');return;}const source=scopeData&&scopeData.name===currentScopeName()?scopeData:base;const rows=all?selectSource():filteredPeople();const scope=currentScopeName()||'Global';const suffix=scope.replace(/[^a-z0-9\-]/gi,'_').slice(0,50);
  if(raw){const wanted=new Set(rows.map(r=>r.row));const result=[['Fila',...source.headers],...(source.allRows||[]).filter(x=>wanted.has(x.row)).map(x=>[x.row,...x.values])];fileBlob(csv(result),'text/csv;charset=utf-8','Educamas_2027I_datos_'+suffix+'.csv');return;}
  const cols=['Nombre','Grupo','Empresa','Tipo','Vínculo','Cargo','Estado','Situación 2027-I','Estado en el fondo','Aprobación EducaMas','Estado Aprobacion Empresa','Status Final','Valor a Financiar','Vr. Final pago matricula','Motivo','Programa'];
  fileBlob(csv([cols,...rows.map(x=>[x.name,x.group,x.company,x.type,x.relation,x.role,x.status,x.situation,x.fund,x.approvalEducation,x.approvalCompany,x.finalStatus,x.financeAmount,x.paidFinal,x.caseStatus,x.program])]),'text/csv;charset=utf-8','Educamas_2027I_estudiantes_'+suffix+'.csv');}
-function exportFinanceCsv(){const items=currentFinancial();const lines=[['Empresa / fondo','Sección','Rubro','Valor']];
+function exportFinanceCsv(){if(hasPendingScope()){error('Confirma el grupo y la empresa antes de descargar.');return;}const items=currentFinancial();const lines=[['Empresa / fondo','Sección','Rubro','Valor']];
  for(const x of items){for(const r of (x.financialRows||[])){
   if(![6,7,8,10,11,12,14,16,17,20,24,25,26,27,28,29,30,31,32,33,38,39,40,41,42,44,45,46].includes(r.row))continue;
   if(r.b)lines.push([x.name,financeSection(r.row),cleanSheetLabel(r.b),r.cDisplay||'Pendiente']);
@@ -484,7 +540,7 @@ function reportModel(rows,items,title,sourceData=base,unfiltered=rows,scenarioKe
  const paid=rows.filter(r=>r.paid),complete=paid.length>0&&paid.every(r=>typeof r.paidFinal==='number');
  const paidTotal=complete?paid.reduce((sum,r)=>sum+r.paidFinal,0):null;
  const finList=sourceData?.financialV34?.projections||[];
- const unitFeeFor=r=>{const f=finList.find(x=>norm(x.name)===norm(r.company))||finList.find(x=>x.isGroup&&norm(x.group)===norm(r.group));return f?.unitFee??null;};
+ const unitFeeFor=r=>{const f=finList.find(x=>norm(x.name)===norm(r.company)&&norm(x.group)===norm(r.group))||finList.find(x=>x.isGroup&&norm(x.group)===norm(r.group));return f?.unitFee??null;};
  const feeComplete=paid.every(r=>typeof unitFeeFor(r)==='number');
  const feeTotal=feeComplete?paid.reduce((sum,r)=>sum+unitFeeFor(r),0):null;
  pages.push({title:'Pagos reportados 2027-I · '+scope,section:'07 / PAGOS REGISTRADOS',metrics:[
@@ -494,45 +550,76 @@ function reportModel(rows,items,title,sourceData=base,unfiltered=rows,scenarioKe
    ['Pagados sin valor final',paid.filter(r=>typeof r.paidFinal!=='number').length],['Vr descuento',paid.length&&paid.every(r=>typeof r.discountValue==='number')?price(paid.reduce((n,r)=>n+r.discountValue,0)):'Pendiente']],
    headers:['Estudiante','Empresa','Status Final','Vr. Inicial pago Matricula (sin descuentos)','Vr descuento','Vr. Final pago matricula'],
    rows:paid.map(r=>[r.name,r.company,r.finalStatus,price(r.paidInitial),price(r.discountValue),price(r.paidFinal)])});
- if(finList.length&&items.length){const names=new Set(items.map(x=>norm(x.name)));
-   const filials=finList.filter(x=>!x.isGroup&&(items.length>1||items.some(p=>x.group===p.group||names.has(norm(x.name)))));
+ if(finList.length&&items.length){
+   // Selección de filial: nunca anexar compañías hermanas del mismo grupo.
+   // Empresa independiente: nunca anexar filiales de un grupo diferente.
+   // Solo el informe grupal/global puede enseñar un desglose de las filiales.
+   const selectedGroups=new Set(items.filter(x=>x.isGroup).map(x=>norm(x.group)));
+   const filials=finList.filter(x=>!x.isGroup&&selectedGroups.has(norm(x.group)));
    if(filials.length)pages.push({title:'Desglose por empresa y filial · '+scope,section:'08 / EMPRESAS',
      headers:['Fondo','Empresa / filial','Matrículas previstas','Matrículas autorizadas','Gastos administrativos','Saldo neto'],
      rows:filials.map(x=>[x.group,x.name,price(x.tuitionBase),price(x.authorized),price(x.feeFinal),price(x.balanceAfterApproval)])});
  }
  return {name:'EDUCAMÁS 2027-I · '+scope,title:'EDUCAMÁS 2027-I · '+scope,subtitle:'2027-I',pages};
 }
-async function download(format,global=false){const key=global?'todos los fondos':currentScopeName()||'todos los fondos',p=$('exportMsg');p.textContent='Actualizando el origen y preparando '+format.toUpperCase()+'…';
- try{const latest=await api('data');const name=currentScopeName();let active=latest.rows||[],items=(latest.financialV34?.projections||[]).filter(x=>x.isGroup);
-  if(!global&&name){const group=currentGroup(),company=currentCompany();items=(latest.financialV34?.projections||[]).filter(x=>company?norm(x.name)===norm(company):x.isGroup&&norm(x.group)===norm(group));
-   const def=(latest.scopes||[]).find(s=>s.name===name&&s.hasStudents);
-   if(def){const source=await api('scope',{scope:name});active=source.rows||[];}else active=active.filter(r=>norm(r.group)===norm(group)&&(!company||norm(r.company)===norm(company)));}
-  const cohort=active;const exported=global?active:filterByOptions(active);
-  const model=reportModel(exported,items,global?'Consolidado general':name||'Consolidado general',latest,cohort,global?new Set():selection);
-  const result=await api('export',{format,payload:model});
-  if(!result?.base64)throw Error('El servidor no devolvió un documento');
-  const bin=atob(result.base64),bytes=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);
-  fileBlob(bytes,format==='pdf'?'application/pdf':'application/vnd.openxmlformats-officedocument.presentationml.presentation',`Educamas_2027I_${global?'Consolidado':name.replace(/[^a-z0-9]/gi,'_')}.${format==='pdf'?'pdf':'pptx'}`);
-  p.textContent='Documento generado con los datos más recientes.';
- }catch(e){p.textContent='No se pudo generar: '+e.message;error(e.message);}}
+async function download(format,consolidated=false){
+ if(hasPendingScope()){error('Confirma el grupo y la empresa antes de descargar el informe.');return;}
+ const group=currentGroup(),company=currentCompany(),name=company||group;
+ const scopeName=name||'Consolidado general';
+ const p=$('exportMsg');p.textContent='Actualizando '+scopeName+' y preparando '+format.toUpperCase()+'…';
+ try{
+   // La palabra "consolidado" significa consolidar el alcance actual:
+   // no saltarse los filtros y volver silenciosamente a todas las empresas.
+   const latest=await api('data');
+   if(group!==currentGroup()||company!==currentCompany())throw Error('Los filtros cambiaron durante la descarga. Vuelve a descargar.');
+   const projects=latest.financialV34?.projections||[];
+   const items=projects.filter(x=>projectionInScope(x,group,company));
+   if(name&&!items.length)throw Error('No se encontró Proye-'+name+' para el alcance seleccionado.');
+   let active=latest.rows||[];
+   if(name){
+     const def=(latest.scopes||[]).find(x=>norm(x.name)===norm(name)&&x.hasStudents);
+     if(def){
+       const source=await api('scope',{scope:name});
+       if(group!==currentGroup()||company!==currentCompany())throw Error('Los filtros cambiaron durante la descarga. Vuelve a descargar.');
+       if(source.scopeGroup&&group&&norm(source.scopeGroup)!==norm(group))throw Error('Los datos pertenecen a otro fondo');
+       if(source.scopeCompany&&company&&norm(source.scopeCompany)!==norm(company))throw Error('Los datos pertenecen a otra filial');
+       if((source.rows||[]).some(r=>!belongsToSelection(r,group,company)))throw Error('La hoja contiene estudiantes de otra empresa');
+       active=source.rows||[];
+     }
+   }
+   active=active.filter(r=>belongsToSelection(r,group,company));
+   // Aplicar también los filtros de estado/tipo/cargo usados en la pantalla.
+   const exported=filterByOptions(active);
+   const report=reportModel(exported,items,scopeName,latest,active,selection);
+   // Asegurar que ningún estudiante ajeno al alcance aparezca en tablas nominales.
+   if(exported.some(r=>!belongsToSelection(r,group,company)))throw Error('El informe contiene registros ajenos al alcance elegido');
+   const result=await api('export',{format,payload:report});
+   if(!result?.base64)throw Error('El servidor no devolvió un documento');
+   const bin=atob(result.base64),bytes=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);
+   fileBlob(bytes,format==='pdf'?'application/pdf':'application/vnd.openxmlformats-officedocument.presentationml.presentation',`Educamas_2027I_${name?name.replace(/[^a-z0-9]/gi,'_'):'Consolidado'}.${format==='pdf'?'pdf':'pptx'}`);
+   p.textContent='Documento generado únicamente para '+scopeName+'.';
+ }catch(e){p.textContent='No se pudo generar: '+e.message;error(e.message);}
+}
+
 async function refresh(){if(loading)return;loading=true;error('');$('sync').textContent='Sincronizando…';$('refreshBtn').disabled=true;
  try{base=await api('data');if(!Array.isArray(base.rows))throw Error('Respuesta incompleta de Apps Script');
-   prepareSelects();scopeData=null;selection.clear();await sourceForScope();$('sync').textContent=`Actualizado ${new Date(base.updated).toLocaleString('es-CO')} · v${base.apiVersion}`;
+   prepareSelects();if(confirmedGroup&&!groups().some(x=>norm(x)===norm(confirmedGroup))){confirmedGroup='';confirmedCompany='';}scopeData=null;selection.clear();await sourceForScope();updateScopeStatus();$('sync').textContent=`Actualizado ${new Date(base.updated).toLocaleString('es-CO')} · v${base.apiVersion}`;
    const missing=base.financialV34?.missingSheets||[];if(missing.length)error('Hojas faltantes: '+missing.join(', '));
  }catch(e){error(e.message);$('sync').textContent='Error de actualización'}finally{loading=false;$('refreshBtn').disabled=false;}}
 async function login(e){e.preventDefault();$('loginError').textContent='';try{await api('login',{password:$('password').value});$('password').value='';$('login').classList.add('hidden');$('app').classList.remove('hidden');await refresh();}catch(e){$('loginError').textContent=e.message;}}
 $('loginForm').addEventListener('submit',login);
-$('logoutBtn').onclick=async()=>{try{await api('logout')}catch(_){}base=null;scopeData=null;view=[];$('app').classList.add('hidden');$('login').classList.remove('hidden')};
+$('logoutBtn').onclick=async()=>{try{await api('logout')}catch(_){}base=null;scopeData=null;view=[];confirmedGroup='';confirmedCompany='';$('app').classList.add('hidden');$('login').classList.remove('hidden')};
 $('refreshBtn').onclick=refresh;
-$('group').onchange=async()=>{buildCompany();selection.clear();page=0;error('');await sourceForScope()};
-$('company').onchange=async()=>{selection.clear();page=0;error('');await sourceForScope()};
+$('group').onchange=()=>{$('company').value='';buildCompany();error('');updateScopeStatus()};
+$('company').onchange=()=>{error('');updateScopeStatus()};
+$('scopeConfirm').onclick=()=>confirmScope().catch(e=>error(e.message));
 ['type','relation','stage','role','studentStatus','situation','educationApproval','companyApproval','paymentStatus'].forEach(id=>$(id).onchange=()=>{page=0;render()});$('search').oninput=()=>{page=0;render()};
-$('clearFilters').onclick=()=>{['group','company','type','relation','stage','role','studentStatus','situation','educationApproval','companyApproval','paymentStatus'].forEach(id=>$(id).value='');$('search').value='';scopeData=null;page=0;selection.clear();render()};
+$('clearFilters').onclick=async()=>{['group','company','type','relation','stage','role','studentStatus','situation','educationApproval','companyApproval','paymentStatus'].forEach(id=>$(id).value='');$('search').value='';confirmedGroup='';confirmedCompany='';scopeData=null;page=0;selection.clear();buildCompany();updateScopeStatus();await sourceForScope()};
 $('prev').onclick=()=>{page=Math.max(0,page-1);renderPeople()};$('next').onclick=()=>{page++;renderPeople()};
 $('selectPre').onclick=()=>{selection=new Set(simCandidates().filter(r=>r.approved||r.paid).map(r=>r.key));renderSim()};$('selectAll').onclick=()=>{selection=new Set(simCandidates().map(r=>r.key));renderSim()};$('selectNone').onclick=()=>{selection.clear();renderSim()};
 ['simCash','simFee'].forEach(id=>$(id).oninput=renderSim);
 $('simPeople').addEventListener('change',e=>{const k=e.target.getAttribute('data-select');if(!k)return;const row=simCandidates().find(r=>r.key===k);if(row?.paid){selection.add(k);renderSim();return;}if(e.target.checked)selection.add(k);else selection.delete(k);renderSim()});
-$('previewBtn').onclick=()=>{const items=currentFinancial(),rows=filteredPeople(),model=reportModel(rows,items,currentScopeName()||'Consolidado general',base,view,selection);$('previewPanel').classList.toggle('hidden');if(!$('previewPanel').classList.contains('hidden')){$('previewPanel').innerHTML='<div style="padding:14px"><strong>'+safe(model.pages.length)+' secciones previstas · '+safe(rows.length)+' registros</strong></div>'+model.pages.filter(p=>!p.cover).map(p=>'<div style="padding:12px 14px;border-top:1px solid #eee"><strong>'+safe(p.title)+'</strong><div class="subtle">'+safe(p.rows?.length||0)+' filas</div></div>').join('');}};
+$('previewBtn').onclick=()=>{if(hasPendingScope()){error('Confirma el grupo y la empresa antes de generar la vista previa.');return;}const items=currentFinancial(),rows=filteredPeople(),model=reportModel(rows,items,currentScopeName()||'Consolidado general',base,view,selection);$('previewPanel').classList.toggle('hidden');if(!$('previewPanel').classList.contains('hidden')){$('previewPanel').innerHTML='<div style="padding:14px"><strong>'+safe(model.pages.length)+' secciones previstas · '+safe(rows.length)+' registros</strong></div>'+model.pages.filter(p=>!p.cover).map(p=>'<div style="padding:12px 14px;border-top:1px solid #eee"><strong>'+safe(p.title)+'</strong><div class="subtle">'+safe(p.rows?.length||0)+' filas</div></div>').join('');}};
 $('csvFiltered').onclick=()=>exportPeople();$('csvAll').onclick=()=>exportPeople(true);$('csvRaw').onclick=()=>exportPeople(false,true);$('csvFinance').onclick=exportFinanceCsv;
 [['pdfScope','pdf',false],['pptScope','pptx',false],['pdfGlobal','pdf',true],['pptGlobal','pptx',true],['quickPdf','pdf',false],['quickPpt','pptx',false],['quickAll','pdf',true]].forEach(([id,format,all])=>$(id).onclick=()=>download(format,all));
 api('session').then(()=>{$('login').classList.add('hidden');$('app').classList.remove('hidden');refresh()}).catch(()=>{});

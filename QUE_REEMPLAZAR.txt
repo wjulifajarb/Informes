@@ -1,20 +1,25 @@
-EDUCAMÁS 2027-I V5.3.2 — AJUSTE VISUAL Y EXPORTACIÓN
+V5.3.4 — CONFIRMAR GRUPO / EMPRESA
 
-REEMPLAZAR ÚNICAMENTE:
-  1. public/index.html       (formato porcentual BL del simulador)
-  2. api/report.js           (página de cartera a ancho completo, sin cuotas/acuerdos)
+REEMPLAZAR SOLAMENTE:
+  public/index.html  →  tu proyecto VS Code / Vercel
 
-NO REEMPLAZAR:
-  apps-script/Code.gs, api/index.js, server.js, vercel.json, .env.local.
-  NO cambiar los datos de Google Sheets ni publicar Apps Script de nuevo.
+NO CAMBIAR si ya usas V5.3.3:
+  apps-script/Code.gs
+  api/index.js
+  api/report.js
+  server.js
+  vercel.json
+  .env.local (nunca compartir ni sobrescribir)
 
-En las DESCARGAS PDF/PPTX ya NO aparecen:
-  - Cuotas y acuerdos 2027-I
-  - Detalle financiero completo
-  - Selección de estudiantes · escenario local
-  - Acuerdos de pago 2027-I
-  - ANEXO · Estudiantes y estado actual
+NUEVO FLUJO:
+  1. Seleccionar Grupo / empresa.
+  2. Seleccionar Empresa dentro del grupo, o dejar Todo el grupo.
+  3. Pulsar "Confirmar empresa / grupo".
+  4. Consultar pantalla y descargar informe del alcance confirmado.
+  5. Restablecer filtros para el consolidado global.
 
-La plataforma HTML conserva el detalle financiero completo, la selección y sus filtros.
+PRUEBAS:
+  npm run check && npm test
+  npm run dev
 
-Verificar: npm run check && npm test; después publicar Vercel.
+No cambia el Google Sheets ni sus fórmulas.
