@@ -28,10 +28,10 @@ module.exports=async function handler(req,res){
   if(p.action==='logout'){res.setHeader('Set-Cookie',cookie(req,'',0));return send(res,200,{ok:true})}
   if(!authorized(req))return send(res,401,{ok:false,error:'Inicia sesión de nuevo'});
   if(p.action==='session')return send(res,200,{ok:true});
-  if(!['data','finance','diagnostic','export'].includes(p.action))return send(res,400,{ok:false,error:'Acción no válida'});
+  if(!['data','scope','finance','diagnostic','export'].includes(p.action))return send(res,400,{ok:false,error:'Acción no válida'});
   if(p.action==='export'&&(!['pptx','pdf'].includes(p.format)||!Array.isArray(p.payload?.pages)||p.payload.pages.length>250))return send(res,400,{ok:false,error:'Informe inválido'});
   if(p.action==='export'){try {const out=await require('./report.js').exportReport(p.payload,p.format);return send(res,200,{ok:true,data:out});}catch(err){return send(res,500,{ok:false,error:'No se pudo generar el informe: '+String(err.message).slice(0,200)});}}
-  const payload={action:p.action,token:process.env.APPS_SCRIPT_TOKEN};if(p.action==='export'){payload.format=p.format;payload.payload=p.payload;}
+  const payload={action:p.action,token:process.env.APPS_SCRIPT_TOKEN};if(p.action==='scope'){if(typeof p.scope!=='string'||p.scope.length>150)return send(res,400,{ok:false,error:'Alcance inválido'});payload.scope=p.scope;}if(p.action==='export'){payload.format=p.format;payload.payload=p.payload;}
   try{
     const upstream=await fetch(process.env.APPS_SCRIPT_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload),redirect:'follow',signal:AbortSignal.timeout(105_000)});
     if(!upstream.ok)return send(res,502,{ok:false,error:`Apps Script respondió con HTTP ${upstream.status}. Verifica la nueva URL /exec y acceso de la implementación; 401/403 ocurre antes de validar el token.`});
@@ -52,7 +52,7 @@ module.exports=async function handler(req,res){
           });
           if(alternate.ok){
             const fj=await alternate.json();
-            if(fj?.ok && (/^(3\.9\.|4\.7\.)/.test(String(fj.data?.apiVersion||''))) &&
+            if(fj?.ok && String(fj.data?.apiVersion||'').startsWith('3.9.') &&
               Array.isArray(fj.data.financialV34?.summary)){
               for(const field of ['financialV34','financialSimple','finance','cartera','cuotas'])
                 if(fj.data[field]!==undefined)d[field]=fj.data[field];
@@ -62,11 +62,7 @@ module.exports=async function handler(req,res){
         }catch(_err){ /* Preservar los registros y reportar el diagnóstico. */ }
       }
       if(!Array.isArray(d.financialV34?.summary)||!d.financialV34.summary.length){
-        d.financialIssue='Tu Apps Script aún no envía las proyecciones Proye-*. ' +
-          'Publica Code.gs V4.7 en la implementación existente y pulsa Actualizar.';
-      }else if(d.financialV34.summary.length<7){
-        d.financialIssue='Se recibieron '+d.financialV34.summary.length+
-          ' de los 7 fondos. Revisa las hojas Proye-* y testV39.';
+        d.financialIssue='Tu Apps Script aún no envía las proyecciones Proye-*. Publica la nueva versión y pulsa Actualizar.';
       }else d.financialIssue='';
     }
     return send(res,200,{ok:true,data:j.data});

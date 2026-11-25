@@ -1,3 +1,22 @@
-V4.9 desde V4.8: reemplazar solo public/index.html y api/report.js.
-No cambiar Apps Script Code.gs V4.7, api/index.js, Google Sheets ni variables de entorno.
-Aplicar despliegue Vercel tras verificar con npm run check y npm test.
+EDUCAMÁS V5.0 — ARCHIVOS A ACTUALIZAR
+
+GOOGLE APPS SCRIPT
+  apps-script/Code.gs  (reemplazar completo y publicar una versión NUEVA).
+
+VISUAL STUDIO CODE / VERCEL
+  public/index.html
+  api/index.js
+  api/report.js (motor PDF/PPTX heredado: si posees una versión posterior a V4.6, conserva tu archivo más reciente)
+  server.js, vercel.json
+  package.json, package-lock.json
+  scripts/check.js, scripts/test-v5.js, scripts/test-report-v5.js
+
+CONSERVAR SIN CAMBIOS
+  .env.local (secreto privado, NO incluir en Git)
+  API_TOKEN de Propiedades del Script y variables de entorno existentes.
+  Todos los datos, valores, fórmulas y estructura del Google Sheets.
+
+VERIFICAR
+  npm ci && npm run check && npm test && npm run dev
+  Apps Script: testScopes(), testConnection(), testFinance().
+  Probar casos reales global / grupo / filial y PDF, PPT y CSV.
