@@ -132,6 +132,8 @@ const norm=s=>String(s??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLo
 const money=n=>typeof n==='number'&&Number.isFinite(n)?new Intl.NumberFormat('es-CO',{style:'currency',currency:'COP',maximumFractionDigits:0}).format(n):'Pendiente';
 const number=n=>typeof n==='number'&&Number.isFinite(n)?new Intl.NumberFormat('es-CO').format(n):'Pendiente';
 const percentage=(a,b)=>b>0?((100*a/b).toFixed(1).replace('.',',')+' %'):'—';
+// BL contiene una fracción (0,0697 = 6,97 %), no una cantidad en pesos.
+const capacityPercent=n=>typeof n==='number'&&Number.isFinite(n)?new Intl.NumberFormat('es-CO',{style:'percent',minimumFractionDigits:2,maximumFractionDigits:2}).format(n):'Pendiente';
 const keygroup=r=>r.group||'Sin grupo';
 let base=null,scopeData=null,loading=false,view=[],page=0,selection=new Set(),effectiveScope='',renderToken=0;
 const PER=24;
@@ -351,7 +353,7 @@ function renderSim(){
  for(const x of candidates)if(x.paid)selection.add(x.key);
  const overrideFee=$('simFee').value===''?null:Number($('simFee').value),overrideCash=$('simCash').value===''?null:Number($('simCash').value);
  const s=simulateSelection(candidates,selection,{fee:overrideFee,cash:overrideCash});
- $('simPeople').innerHTML=candidates.length?`<table aria-label="Estudiantes disponibles para la simulación"><thead><tr><th>Incluir</th><th>Nombre del estudiante</th><th>Aprobación EducaMas</th><th>Estado Aprobacion Empresa</th><th>Status Final</th><th>Valor a Financiar</th><th>Capacidad de endeudamiento</th><th>Vr. Final pago matricula</th><th>Tarifa administrativa</th></tr></thead><tbody>${candidates.map(x=>`<tr class="${x.paid?'sim-paid':''}"><td><label><input aria-label="${x.paid?'Pagado incluido automáticamente':'Seleccionar'}: ${safe(x.name)}" class="scopecheck" type="checkbox" data-select="${safe(x.key)}" ${selection.has(x.key)?'checked':''} ${x.paid?'disabled title="Pagado incluido automáticamente"':''}>${x.paid?'<span class="sim-fixed">Pagado</span>':''}</label></td><td>${safe(x.name)}</td><td>${safe(x.approvalEducation||'Pendiente')}</td><td>${safe(x.approvalCompany||'Pendiente')}</td><td>${safe(x.finalStatus||'Pendiente')}</td><td class="tabular">${safe(money(x.financeAmount))}</td><td class="tabular">${safe(money(x.debtCapacity))}</td><td class="tabular">${safe(money(x.paidFinal))}</td><td class="tabular">${safe(money(s.feeFor(x)))}</td></tr>`).join('')}</tbody></table>`:'<div class="empty">No hay preaprobados, casos especiales, aprobados por empresa ni pagados en esta empresa.</div>';
+ $('simPeople').innerHTML=candidates.length?`<table aria-label="Estudiantes disponibles para la simulación"><thead><tr><th>Incluir</th><th>Nombre del estudiante</th><th>Aprobación EducaMas</th><th>Estado Aprobacion Empresa</th><th>Status Final</th><th>Valor a Financiar</th><th>Capacidad de endeudamiento</th><th>Vr. Final pago matricula</th><th>Tarifa administrativa</th></tr></thead><tbody>${candidates.map(x=>`<tr class="${x.paid?'sim-paid':''}"><td><label><input aria-label="${x.paid?'Pagado incluido automáticamente':'Seleccionar'}: ${safe(x.name)}" class="scopecheck" type="checkbox" data-select="${safe(x.key)}" ${selection.has(x.key)?'checked':''} ${x.paid?'disabled title="Pagado incluido automáticamente"':''}>${x.paid?'<span class="sim-fixed">Pagado</span>':''}</label></td><td>${safe(x.name)}</td><td>${safe(x.approvalEducation||'Pendiente')}</td><td>${safe(x.approvalCompany||'Pendiente')}</td><td>${safe(x.finalStatus||'Pendiente')}</td><td class="tabular">${safe(money(x.financeAmount))}</td><td class="tabular">${safe(capacityPercent(x.debtCapacity))}</td><td class="tabular">${safe(money(x.paidFinal))}</td><td class="tabular">${safe(money(s.feeFor(x)))}</td></tr>`).join('')}</tbody></table>`:'<div class="empty">No hay preaprobados, casos especiales, aprobados por empresa ni pagados en esta empresa.</div>';
  const automatic=candidates.filter(x=>x.paid).length;
  $('simSelectionHint').textContent=`${number(candidates.length)} personas en esta empresa · ${number(s.selected.length)} incluidas · ${number(automatic)} pagadas incluidas automáticamente (BU + tarifa). Las demás se seleccionan con el check. Cada matrícula se cuenta una sola vez.`;
  kpis('simKpis',[
@@ -452,7 +454,6 @@ function reportModel(rows,items,title,sourceData=base,unfiltered=rows,scenarioKe
     rows:items.map(x=>[x.name,price(x.cash),price(x.tuitionBase),price(x.feeBase),price(x.donationBase),price(x.authorized),price(x.balanceAfterApproval)])});
  }
  const finances=items.length?items:[];
- const meaningfulRows=new Set([6,7,8,10,11,12,14,16,17,20,24,25,26,27,28,29,30,31,32,33,38,39,40,41,42,44,45,46]);
  const rowValue=(x,row,side='c')=>{
    const cell=(x.financialRows||[]).find(x=>x.row===row);
    if(cell)return financeFormat(cell,side);
@@ -474,38 +475,12 @@ function reportModel(rows,items,title,sourceData=base,unfiltered=rows,scenarioKe
    pages.push({title:'Proyección Fondo Educativo 2027-I · '+name,section:'05 / PROYECCIÓN Y SIMULADOR',kind:'comparison',
      leftTitle:financeLabel(x,21),leftHeaders:['Rubro','Valor COP'],leftRows:fromSheet(x,left,'c'),
      rightTitle:financeLabel(x,21,'E'),rightHeaders:['Rubro','Valor COP'],rightRows:fromSheet(x,right,'f')});
-   // Evitar el antiguo problema de incluir registros de otras filiales en el reporte individual.
-   const groupPeople=rows.filter(r=>x.isGroup?norm(r.group)===norm(x.group):norm(r.group)===norm(x.group)&&norm(r.company)===norm(x.company));
-   const agreements=groupPeople.filter(r=>r.simulationCuota!==null||r.numeroCuotas!==null);
+   // Exportación compacta: conservar la cartera oficial, sin cuotas/acuerdos ni anexos.
+   // Las listas, la simulación y el detalle financiero continúan disponibles en el HTML.
    pages.push({title:'Estado de cartera 2026-II · '+name,section:'06 / CARTERA Y RECUPERACIÓN',kind:'portfolio',
-     leftTitle:financeLabel(x,37),leftHeaders:['Rubro','Valor COP'],leftRows:fromSheet(x,[38,39,40,41,42,44,45,46]),
-     rightTitle:'Cuotas y acuerdos 2027-I',rightHeaders:['Estudiante','Simulación Cuota / Numero de Cuotas'],rightRows:agreements.slice(0,12).map(r=>[r.name,`${price(r.simulationCuota)} · ${amount(r.numeroCuotas)} cuotas`])});
-   // Anexo del archivo de proyección: todos los importes visibles, sin recortar la fila 16 ni la tarifa.
-   const ledger=[];
-   ledger.push(['Hoja de proyección','Empresa / fondo',x.sheet]);
-   if(x.financeStatusLabel&&x.financeStatus)ledger.push(['Control financiero',x.financeStatusLabel,x.financeStatus]);
-   for(const r of (x.financialRows||[])){
-     if(r.row<6||r.row>46)continue;
-     if(r.b&&meaningfulRows.has(r.row))ledger.push([financeSection(r.row),cleanSheetLabel(r.b),financeFormat(r,'c')]);
-     if(r.e&&meaningfulRows.has(r.row))ledger.push([financeSection(r.row)+' · '+financeLabel(x,21,'E'),cleanSheetLabel(r.e),financeFormat(r,'f')]);
-   }
-   if(ledger.length)pages.push({title:'Detalle financiero completo · '+name,section:'06 / ANEXO FINANCIERO',
-     headers:['Sección','Rubro','Valor'],rows:ledger});
+     leftTitle:financeLabel(x,37),leftHeaders:['Rubro','Valor COP'],leftRows:fromSheet(x,[38,39,40,41,42,44,45,46])});
  }
 
- // La simulación seleccionada se anexa aparte; nunca sustituye las fórmulas oficiales de F24:F33.
- const selectedRows=rows.filter(r=>scenarioKeys&&scenarioKeys.has(r.key));
- if(selectedRows.length){
-   const allFin=sourceData?.financialV34?.projections||[];
-   const unitFeeFor=x=>{const f=allFin.find(p=>!p.isGroup&&norm(p.name)===norm(x.company)&&norm(p.group)===norm(x.group))||allFin.find(p=>p.isGroup&&norm(p.group)===norm(x.group));return f?.unitFee??null;};
-   const missing=selectedRows.filter(r=>typeof tuitionForSimulation(r)!=='number'||typeof unitFeeFor(r)!=='number');
-   const tuition=selectedRows.every(r=>typeof tuitionForSimulation(r)==='number')?selectedRows.reduce((a,r)=>a+tuitionForSimulation(r),0):null;
-   const fees=selectedRows.every(r=>typeof unitFeeFor(r)==='number')?selectedRows.reduce((a,r)=>a+unitFeeFor(r),0):null;
-   pages.push({title:'Selección de estudiantes · escenario local · '+scope,section:'05 / SIMULACIÓN CON APROBACIÓN FINAL EMPRESA',
-     metrics:[['Personas seleccionadas',selectedRows.length],['Matrículas seleccionadas',price(tuition)],['Administración de seleccionados',price(fees)]],
-     headers:['Estudiante','Estado Aprobacion Empresa','Status Final','Origen del valor','Matrícula','Tarifa administrativa'],
-     rows:selectedRows.map(r=>[r.name,r.approvalCompany||'Pendiente',r.finalStatus||'Pendiente',r.paid?'Vr. Final pago matricula':'Valor a Financiar',price(tuitionForSimulation(r)),price(unitFeeFor(r))])});
- }
  const paid=rows.filter(r=>r.paid),complete=paid.length>0&&paid.every(r=>typeof r.paidFinal==='number');
  const paidTotal=complete?paid.reduce((sum,r)=>sum+r.paidFinal,0):null;
  const finList=sourceData?.financialV34?.projections||[];
@@ -519,20 +494,12 @@ function reportModel(rows,items,title,sourceData=base,unfiltered=rows,scenarioKe
    ['Pagados sin valor final',paid.filter(r=>typeof r.paidFinal!=='number').length],['Vr descuento',paid.length&&paid.every(r=>typeof r.discountValue==='number')?price(paid.reduce((n,r)=>n+r.discountValue,0)):'Pendiente']],
    headers:['Estudiante','Empresa','Status Final','Vr. Inicial pago Matricula (sin descuentos)','Vr descuento','Vr. Final pago matricula'],
    rows:paid.map(r=>[r.name,r.company,r.finalStatus,price(r.paidInitial),price(r.discountValue),price(r.paidFinal)])});
- pages.push({title:'Acuerdos de pago 2027-I · '+scope,section:'07 / PAGOS REGISTRADOS',
-   headers:['Estudiante','Empresa','Estado Aprobacion Empresa','Valor a Financiar','Simulación Cuota','Numero de Cuotas'],
-   rows:rows.filter(r=>r.simulationCuota!==null||r.numeroCuotas!==null).map(r=>[
-     r.name,r.company,r.approvalCompany,price(r.financeAmount),price(r.simulationCuota),amount(r.numeroCuotas)])});
  if(finList.length&&items.length){const names=new Set(items.map(x=>norm(x.name)));
    const filials=finList.filter(x=>!x.isGroup&&(items.length>1||items.some(p=>x.group===p.group||names.has(norm(x.name)))));
    if(filials.length)pages.push({title:'Desglose por empresa y filial · '+scope,section:'08 / EMPRESAS',
      headers:['Fondo','Empresa / filial','Matrículas previstas','Matrículas autorizadas','Gastos administrativos','Saldo neto'],
      rows:filials.map(x=>[x.group,x.name,price(x.tuitionBase),price(x.authorized),price(x.feeFinal),price(x.balanceAfterApproval)])});
  }
- pages.push({title:'ANEXO · Estudiantes y estado actual · '+scope,section:'09 / ANEXO · BASE 2027-I',
-   headers:['Estudiante','Empresa / filial','Antiguo / nuevo','Estado','Situación','Valor a Financiar','Vr. Final pago matricula'],
-   rows:rows.filter(r=>r.registered||r.graduated||r.retired).map(r=>[
-     r.name,r.company,r.type,r.status,r.situation,price(r.financeAmount),price(r.paidFinal)])});
  return {name:'EDUCAMÁS 2027-I · '+scope,title:'EDUCAMÁS 2027-I · '+scope,subtitle:'2027-I',pages};
 }
 async function download(format,global=false){const key=global?'todos los fondos':currentScopeName()||'todos los fondos',p=$('exportMsg');p.textContent='Actualizando el origen y preparando '+format.toUpperCase()+'…';

@@ -1,9 +1,20 @@
-EDUCAMÁS V5.3 — ARCHIVOS PARA ACTUALIZAR
+EDUCAMÁS 2027-I V5.3.2 — AJUSTE VISUAL Y EXPORTACIÓN
 
-1. apps-script/Code.gs: reemplazar y publicar Nueva versión de Apps Script. Conservar API_TOKEN.
-2. api/index.js: reemplazar (verifica versión de la API 5.3.0).
-3. public/index.html: reemplazar (HTML responsive y simulación nominal BI/BU).
-4. api/report.js: incluido completo; puede conservarse el de V5.2 si ya funciona.
+REEMPLAZAR ÚNICAMENTE:
+  1. public/index.html       (formato porcentual BL del simulador)
+  2. api/report.js           (página de cartera a ancho completo, sin cuotas/acuerdos)
 
-Mantener: .env.local, server.js, vercel.json. NO subir secretos ni editar Sheets.
-Ejecutar: npm ci && npm run check && npm test && npm run dev.
+NO REEMPLAZAR:
+  apps-script/Code.gs, api/index.js, server.js, vercel.json, .env.local.
+  NO cambiar los datos de Google Sheets ni publicar Apps Script de nuevo.
+
+En las DESCARGAS PDF/PPTX ya NO aparecen:
+  - Cuotas y acuerdos 2027-I
+  - Detalle financiero completo
+  - Selección de estudiantes · escenario local
+  - Acuerdos de pago 2027-I
+  - ANEXO · Estudiantes y estado actual
+
+La plataforma HTML conserva el detalle financiero completo, la selección y sus filtros.
+
+Verificar: npm run check && npm test; después publicar Vercel.

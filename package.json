@@ -1,6 +1,6 @@
 {
   "name": "educamas-fondos-2027-1",
-  "version": "5.3.1",
+  "version": "5.3.2",
   "private": true,
   "engines": {
     "node": "22.x"
@@ -11,7 +11,7 @@
     "check": "node --check server.js && node --check api/index.js && node scripts/check.js && node --check api/report.js",
     "secrets": "node -e \"console.log(require('node:crypto').randomBytes(32).toString('hex'))\"",
     "configurar": "node scripts/configure.js",
-    "test": "node scripts/test-v5.js && node scripts/test-v51.js && node scripts/test-report-v5.js && node scripts/test-v52.js && node scripts/test-v53.js && node scripts/test-v531.js",
+    "test": "node scripts/test-v5.js && node scripts/test-v51.js && node scripts/test-report-v5.js && node scripts/test-v52.js && node scripts/test-v53.js && node scripts/test-v531.js && node scripts/test-v532.js",
     "conectar": "node scripts/connect.js"
   },
   "dependencies": {

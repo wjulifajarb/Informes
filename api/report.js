@@ -45,6 +45,15 @@ function layout(payload){
    note(page,page.note);
  }
  function financialPortfolio(page){
+   // El informe presenta únicamente el estado de cartera de la proyección.
+   // No exportar el panel de cuotas y acuerdos; permanece en el HTML.
+   if(!page.rightHeaders?.length){
+     const single=panelTable(page.leftHeaders,page.leftRows,L,y,CW,B-70,page.leftTitle,[2.8,1.2],13.5);
+     y=single.end+16;
+     if(single.remaining.length){continuation(page);tableFlow(page,page.leftHeaders,single.remaining,[2.8,1.2]);}
+     note(page,page.note);
+     return;
+   }
    const gap=22, ww=(CW-gap)/2, sy=y;
    const left=panelTable(page.leftHeaders,page.leftRows,L,sy,ww,B-70,page.leftTitle,[2.8,1.2],12.4);
    const right=panelTable(page.rightHeaders,page.rightRows,L+ww+gap,sy,ww,B-70,page.rightTitle,[2.8,1.2],12.4);

@@ -9,10 +9,10 @@ function el(id){return elements[id]??(elements[id]={value:'',textContent:'',inne
 const context={document:{getElementById:el},console,Intl,Date,Map,Set,JSON,Option:function(){},fetch:async()=>({ok:false,json:async()=>({ok:false})}),setTimeout:()=>0};
 vm.createContext(context);vm.runInContext(script,context);
 const people=[
- {key:'pre',name:'Preaprobado',group:'Transportes Vigía',company:'Transportes Vigía',preapproved:true,special:false,approved:false,paid:false,approvalEducation:'Pre aprobado educamás',approvalCompany:'',finalStatus:'',financeAmount:500,debtCapacity:900},
- {key:'esp',name:'Caso especial',group:'Transportes Vigía',company:'Transportes Vigía',preapproved:false,special:true,approved:false,paid:false,approvalEducation:'Caso Especial - Revisión',approvalCompany:'',finalStatus:'',financeAmount:450,debtCapacity:800},
- {key:'paid1',name:'Pago anticipado',group:'Transportes Vigía',company:'Transportes Vigía',preapproved:true,special:false,approved:true,paid:true,approvalEducation:'Pre aprobado educamás',approvalCompany:'Aprobacion anticipada',finalStatus:'Pagado',financeAmount:400,paidFinal:100,debtCapacity:750},
- {key:'paid2',name:'Pago final',group:'Transportes Vigía',company:'Transportes Vigía',preapproved:false,special:false,approved:true,paid:true,approvalEducation:'',approvalCompany:'Aprobado',finalStatus:'Pagado',financeAmount:400,paidFinal:200,debtCapacity:700}
+ {key:'pre',name:'Preaprobado',group:'Transportes Vigía',company:'Transportes Vigía',preapproved:true,special:false,approved:false,paid:false,approvalEducation:'Pre aprobado educamás',approvalCompany:'',finalStatus:'',financeAmount:500,debtCapacity:0.06969696969696969},
+ {key:'esp',name:'Caso especial',group:'Transportes Vigía',company:'Transportes Vigía',preapproved:false,special:true,approved:false,paid:false,approvalEducation:'Caso Especial - Revisión',approvalCompany:'',finalStatus:'',financeAmount:450,debtCapacity:0.28},
+ {key:'paid1',name:'Pago anticipado',group:'Transportes Vigía',company:'Transportes Vigía',preapproved:true,special:false,approved:true,paid:true,approvalEducation:'Pre aprobado educamás',approvalCompany:'Aprobacion anticipada',finalStatus:'Pagado',financeAmount:400,paidFinal:100,debtCapacity:0.2857142857142857},
+ {key:'paid2',name:'Pago final',group:'Transportes Vigía',company:'Transportes Vigía',preapproved:false,special:false,approved:true,paid:true,approvalEducation:'',approvalCompany:'Aprobado',finalStatus:'Pagado',financeAmount:400,paidFinal:200,debtCapacity:0.33}
 ];
 const projection={name:'Transportes Vigía',group:'Transportes Vigía',company:'',isGroup:true,unitFee:50,cash:10000};
 context.fixture={rows:people,financialV34:{projections:[projection]},scopes:[],headers:[],allRows:[]};
@@ -27,7 +27,8 @@ assert(!vm.runInContext('selection.has("pre") || selection.has("esp")',context))
 const markup=el('simPeople').innerHTML;
 for(const name of ['Nombre del estudiante','Aprobación EducaMas','Estado Aprobacion Empresa','Status Final','Valor a Financiar','Capacidad de endeudamiento','Vr. Final pago matricula','Tarifa administrativa'])assert(markup.includes(name),name);
 assert(markup.includes('disabled title="Pagado incluido automáticamente"'));
-assert(markup.includes('900') && markup.includes('750'));
+assert(markup.includes('6,97') && markup.includes('28,57'),'BL debe aparecer en porcentaje y no como pesos');
+assert(!markup.includes('$ 0')&&!markup.includes('$0'),'BL no debe mostrarse como valor monetario');
 assert(markup.includes('Preaprobado') && markup.includes('Caso especial') && markup.includes('Pago anticipado'));
 const auto=context.simulateSelection(context.simCandidates(),new Set(['paid1','paid2']),{fee:null,cash:null});
 assert.equal(auto.tuition,300,'El pagado usa BU, no BI');assert.equal(auto.fees,100,'Fee por los dos pagados');assert.equal(auto.total,400);

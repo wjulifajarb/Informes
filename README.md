@@ -1,3 +1,12 @@
+# EDUCAMÁS · V5.3.2 (ajuste puntual)
+
+- Capacidad de endeudamiento (BL) se presenta como porcentaje (0,0697 → 6,97 %), sin convertirlo a pesos ni modificar los datos.
+- En PDF/PPTX se omiten: Cuotas y acuerdos, Detalle financiero completo, Selección de estudiantes de escenario local, Acuerdos de pago y ANEXO de estudiantes y estado.
+- La plataforma HTML conserva todas las pestañas, filtros, detalle financiero, simulador nominal y tablas.
+- El Estado de cartera 2026-II se imprime a ancho completo.
+- No necesita actualización de Apps Script ni de la API; únicamente `public/index.html` y `api/report.js`.
+- Copia siempre `.env.local` desde tu proyecto existente; no se incluye en este ZIP.
+
 # Educamás 2027-I — ajuste puntual del simulador V5.3.1
 
 Esta entrega parte de la versión **5.3** que ya tiene conexión a `Financiero2027-1` y a las 19 parejas `Estudiantes-[Empresa]` y `Proye-[Empresa]`.
