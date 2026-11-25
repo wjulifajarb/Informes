@@ -1,5 +1,5 @@
 'use strict';
-/* Educamás — exportador V3.1. PDF vectorial y PowerPoint con texto y formas editables.
+/* Educamás — exportador editorial V5.3. PDF vectorial y PowerPoint con texto y formas editables.
    Contrato compatible con api/index.js y public/index.html de la V3. No usa Google Slides. */
 const PptxGenJS = require('pptxgenjs');
 const W=960,H=720,Y='FFC400',WHITE='FFFFFF',BLACK='181818',GRAY='6D6B65',LIGHT='F8F7F3',LINE='DEDCD4',ALT='F3F1EB',PALE='FFF1BD';

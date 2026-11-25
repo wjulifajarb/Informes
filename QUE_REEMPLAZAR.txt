@@ -1,22 +1,9 @@
-EDUCAMÁS V5.0 — ARCHIVOS A ACTUALIZAR
+EDUCAMÁS V5.3 — ARCHIVOS PARA ACTUALIZAR
 
-GOOGLE APPS SCRIPT
-  apps-script/Code.gs  (reemplazar completo y publicar una versión NUEVA).
+1. apps-script/Code.gs: reemplazar y publicar Nueva versión de Apps Script. Conservar API_TOKEN.
+2. api/index.js: reemplazar (verifica versión de la API 5.3.0).
+3. public/index.html: reemplazar (HTML responsive y simulación nominal BI/BU).
+4. api/report.js: incluido completo; puede conservarse el de V5.2 si ya funciona.
 
-VISUAL STUDIO CODE / VERCEL
-  public/index.html
-  api/index.js
-  api/report.js (motor PDF/PPTX heredado: si posees una versión posterior a V4.6, conserva tu archivo más reciente)
-  server.js, vercel.json
-  package.json, package-lock.json
-  scripts/check.js, scripts/test-v5.js, scripts/test-report-v5.js
-
-CONSERVAR SIN CAMBIOS
-  .env.local (secreto privado, NO incluir en Git)
-  API_TOKEN de Propiedades del Script y variables de entorno existentes.
-  Todos los datos, valores, fórmulas y estructura del Google Sheets.
-
-VERIFICAR
-  npm ci && npm run check && npm test && npm run dev
-  Apps Script: testScopes(), testConnection(), testFinance().
-  Probar casos reales global / grupo / filial y PDF, PPT y CSV.
+Mantener: .env.local, server.js, vercel.json. NO subir secretos ni editar Sheets.
+Ejecutar: npm ci && npm run check && npm test && npm run dev.

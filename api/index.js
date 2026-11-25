@@ -37,34 +37,14 @@ module.exports=async function handler(req,res){
     if(!upstream.ok)return send(res,502,{ok:false,error:`Apps Script respondió con HTTP ${upstream.status}. Verifica la nueva URL /exec y acceso de la implementación; 401/403 ocurre antes de validar el token.`});
     const j=await upstream.json().catch(()=>null);
     if(!j)return send(res,502,{ok:false,error:'Apps Script no respondió JSON. Verifica que la URL termina en /exec y que la implementación permite solicitudes del servidor.'});
-    if(!j.ok)return send(res,502,{ok:false,error:j.error||'Error en Apps Script'});
-    if(p.action==='data' && j.data && typeof j.data==='object') {
-      const d=j.data;
-      const ok=Array.isArray(d.financialV34?.summary)&&d.financialV34.summary.length>0;
-      if(!ok){
-        // Consulta de respaldo, útil si el bloque no vino en `data`.
-        // Solo aceptamos el formato V3.9, con datos de pagos y cartera.
-        try{
-          const alternate=await fetch(process.env.APPS_SCRIPT_URL,{
-            method:'POST',headers:{'Content-Type':'application/json'},
-            body:JSON.stringify({action:'finance',token:process.env.APPS_SCRIPT_TOKEN}),
-            redirect:'follow',signal:AbortSignal.timeout(20_000)
-          });
-          if(alternate.ok){
-            const fj=await alternate.json();
-            if(fj?.ok && String(fj.data?.apiVersion||'').startsWith('3.9.') &&
-              Array.isArray(fj.data.financialV34?.summary)){
-              for(const field of ['financialV34','financialSimple','finance','cartera','cuotas'])
-                if(fj.data[field]!==undefined)d[field]=fj.data[field];
-              d.apiVersion=fj.data.apiVersion;
-            }
-          }
-        }catch(_err){ /* Preservar los registros y reportar el diagnóstico. */ }
-      }
-      if(!Array.isArray(d.financialV34?.summary)||!d.financialV34.summary.length){
-        d.financialIssue='Tu Apps Script aún no envía las proyecciones Proye-*. Publica la nueva versión y pulsa Actualizar.';
-      }else d.financialIssue='';
+    if(!j.ok){
+      const detail=String(j.error||'Error en Apps Script');
+      if(/JULI-2027-1|No existe la pestaña JULI|No existe la hoja JULI/i.test(detail))return send(res,409,{ok:false,error:'La aplicación continúa conectada a una implementación ANTIGUA de Apps Script (JULI-2027-1). Publica Code.gs V5.3 como Nueva versión y actualiza APPS_SCRIPT_URL en Vercel si cambió la URL /exec.'});
+      return send(res,502,{ok:false,error:detail});
     }
+    const upstreamVersion=String(j.version||j.data?.apiVersion||'');
+    if(!upstreamVersion.startsWith('5.3.'))return send(res,409,{ok:false,error:'Apps Script desactualizado (recibido: '+(upstreamVersion||'sin versión')+'). Publica Code.gs V5.3 en la implementación /exec; la web no puede cargar datos desde la versión anterior.'});
+    if(p.action==='data' && (!Array.isArray(j.data?.rows) || !Array.isArray(j.data?.financialV34?.projections)))return send(res,502,{ok:false,error:'Respuesta de datos incompleta. Verifica las hojas Financiero2027-1 y Proye-[Empresa].'});
     return send(res,200,{ok:true,data:j.data});
   }catch{return send(res,502,{ok:false,error:'No se pudo comunicar con Apps Script. Revisa la URL, permisos y tiempo de ejecución.'})}
 };

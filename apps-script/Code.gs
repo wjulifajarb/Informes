@@ -5,7 +5,7 @@
  * SOLO LECTURA. Nunca modifica los datos ni las fórmulas del libro.
  * El token permanece en las Propiedades del script: API_TOKEN.
  */
-const API_VERSION = '5.0.0';
+const API_VERSION = '5.3.1';
 const CFG = {
   id:'1TkVBmU6NOCVpPkSdAUpXeUREAclVdWQnquJNh7y-bZE',
   sheet:'Financiero2027-1', period:'2027-1', refresh:60
@@ -15,7 +15,7 @@ const POS = Object.freeze({fund:0,internal:1,created:3,status:4,group:5,company:
   residence:19,motivation:20,requirements:21,guardianRole:28,role:31,
   level:38,university:39,program:40,periods:46,firstGenSource:49,
   approximateTuition:50,abono:55,cesantias:56,prima:57,
-  caseStatus:58,continues:59,financeAmount:60,simulation:61,installments:62,
+  caseStatus:58,continues:59,financeAmount:60,simulation:61,installments:62,capacityDebt:63,
   approvalEducation:64,approvalCompany:65,finalStatus:66,paidDate:67,
   paidInitial:68,discountType:69,discountPct:70,discountValue:71,paidFinal:72});
 function json_(x){return ContentService.createTextOutput(JSON.stringify(x)).setMimeType(ContentService.MimeType.JSON);}
@@ -72,7 +72,13 @@ function readPeople_(sh){
     const retired=/reti(r|ro|rada|rado)|desvincul|cancel/i.test(norm_(status+' '+pick(POS.caseStatus)));
     const notInscribed=/no inscri|no contactabilidad|no continua/i.test(norm_(status+' '+pick(POS.caseStatus)));
     const graduated=/graduad/i.test(norm_(status));
-    const registered=['inscrito','pre-aprobado','preaprobado','docs completados','documentos completados','aprobado','pagado'].includes(norm_(status))||preapproved||special||approved||paid;
+    // Universo inscrito 2027-I: SOLO etapas E de inscripción o posteriores.
+    // Mantener A=Activo separado: hay inscritos que aún no están formalizados activos.
+    const registered=['inscrito','pre-aprobado','preaprobado','docs completados','documentos completados','aprobado','pagado'].includes(norm_(status));
+    const previousBeneficiary=norm_(pick(POS.type)).includes('antiguo');
+    const continues2027=previousBeneficiary&&registered;
+    const notContinuing=previousBeneficiary&&!registered;
+    const situation=previousBeneficiary?(graduated?'Graduado 2026-II':retired?'Retirado':registered?'Continúa 2027-I':notInscribed||/pre-registro/i.test(status)?'No inscrito 2027-I':'No continúa 2027-I'):(registered?'Nuevo inscrito 2027-I':'En registro 2027-I');
     const stage=paid?'Pagado':approved?'Aprobado':preapproved?'Preaprobado':special?'Caso especial':
       graduated?'Graduado':retired?'Retirado':notInscribed?'No inscrito':norm_(status)==='inscrito'?'Inscrito':status||'Registro';
     const relation=pick(POS.relation)||'Sin dato';
@@ -86,12 +92,12 @@ function readPeople_(sh){
       requirements:pick(POS.requirements),firstGenSource:pick(POS.firstGenSource),
       continues:pick(POS.continues),abono:n(POS.abono),cesantias:n(POS.cesantias),prima:n(POS.prima),
       tuition:n(POS.approximateTuition),tuitionText:pick(POS.approximateTuition),
-      financeAmount:n(POS.financeAmount),simulationCuota:n(POS.simulation),numeroCuotas:n(POS.installments),approvalEducation:bm,approvalCompany:bn,finalStatus:bo,
+      financeAmount:n(POS.financeAmount),simulationCuota:n(POS.simulation),numeroCuotas:n(POS.installments),debtCapacity:n(POS.capacityDebt),approvalEducation:bm,approvalCompany:bn,finalStatus:bo,
       paidAmount:paid?n(POS.paidFinal):null,paidDate:pick(POS.paidDate),paidInitial:n(POS.paidInitial),
       paidFinal:n(POS.paidFinal),discountType:pick(POS.discountType),discountPct:n(POS.discountPct),
       discountValue:n(POS.discountValue),paymentSource:'Financiero2027-1 · BU (valor final matrícula; no prueba de conciliación bancaria)',
       paidSupport:'', earlyReference:null,earlyReferenceFlag:bn&&norm_(bn)==='aprobacion anticipada',
-      companyInferred:!pick(POS.company),isActive:active,paid,registered,preapproved,special,approved,retired,graduated,
+      companyInferred:!pick(POS.company),isActive:active,paid,registered,preapproved,special,approved,retired,graduated,previousBeneficiary,continues2027,notContinuing,situation,formalizedActive:active&&registered,
       eligible:active&&!paid&&!retired,notInscribed,validTuition:n(POS.financeAmount)!==null,duplicateConflict:false};
     // La columna B / Estado interno JAMÁS sale al navegador ni al CSV.
     allRows.push({row:obj.row,key,group,company,stage,values:d.filter((_,j)=>j!==POS.internal)});
@@ -104,30 +110,41 @@ function readPeople_(sh){
 function discover_(ss){const names=ss.getSheets().map(x=>x.getName()),lookup={};names.forEach(n=>lookup[n]=true);
  return names.filter(n=>n.indexOf('Proye-')===0).map(n=>({name:n.slice(6),projection:n,
    students:'Estudiantes-'+n.slice(6),hasStudents:!!lookup['Estudiantes-'+n.slice(6)],hasProjection:true}));}
-function readProjection_(ss,cfg){const sh=ss.getSheetByName(cfg.projection);if(!sh)return null;
-  const data=sh.getRange(1,2,Math.min(sh.getLastRow(),46),5).getValues();
-  const at=(r,c)=>data[r-1]&&data[r-1][c==='F'?4:c==='E'?3:c==='D'?2:c==='B'?0:1];
-  const n=(r,c='C')=>num_(at(r,c));const t=(r,c='B')=>val_(at(r,c));
-  const cells={},labels={};
-  [6,7,8,10,11,12,14,16,17,20,24,25,26,27,28,29,30,31,32,33,38,39,40,41,42,44,45,46].forEach(r=>{
-    cells['C'+r]=n(r);cells['F'+r]=n(r,'F');labels['B'+r]=t(r);labels['E'+r]=t(r,'E');
-  });
-  const filled=[6,7,10,11].filter(r=>n(r)!==null).length;
-  const validation=filled===4?'Datos cargados · pendientes de validación de Finanzas':filled?
-    'Parcial: '+filled+'/4 datos históricos':'Pendiente de diligenciar';
-  return {group:'',company:'',name:cfg.name,sheet:cfg.projection,studentsSheet:cfg.students,
-    cells,labels,historyDataLoaded:filled>0,validation,unitFee:n(20),
-    initial:n(6),donation2026:n(7),tuitionPaid2026:n(10),admin2026:n(11),
-    cashRecovered:n(16),cash:n(17),cashPotential:null,
-    base:n(24),special:n(25),paidCount:n(26),tuitionBase:n(27),feeBase:n(28),
-    costCall:n(29),donationBase:n(31),donationWithDecember:n(33),
-    finalApproved:n(24,'F'),specialApproved:n(25,'F'),paidEarly:n(26,'F'),
-    authorized:n(27,'F'),feeFinal:n(28,'F'),balanceAfterApproval:n(31,'F'),
-    decemberForecast:n(32),decemberFinal:n(33,'F'),
-    carteraTuition:n(38),carteraBenefits:n(39),carteraRecoverable:n(40),
-    carteraPrevious:n(41),carteraTotal:n(42),carteraCollected:n(44),
-    carteraRecoveredPct:n(45),carteraPending:n(46)};
+function readProjection_(ss,cfg){
+ const sh=ss.getSheetByName(cfg.projection);if(!sh)return null;
+ // B:F, 46 filas reales del modelo: rótulos, importes, fórmulas evaluadas, fechas y porcentajes.
+ // No usar getFormulas para calcular de nuevo: respetar lo que Sheets ya calculó.
+ const height=Math.min(Math.max(sh.getLastRow(),46),46);
+ const range=sh.getRange(1,2,height,5),data=range.getValues(),shown=range.getDisplayValues();
+ const at=(r,c)=>data[r-1]&&data[r-1][c==='F'?4:c==='E'?3:c==='D'?2:c==='B'?0:1];
+ const textAt=(r,c)=>val_(shown[r-1]&&shown[r-1][c==='F'?4:c==='E'?3:c==='D'?2:c==='B'?0:1]);
+ const n=(r,c='C')=>num_(at(r,c));const t=(r,c='B')=>val_(at(r,c));
+ const cells={},labels={},financialRows=[];
+ for(let r=1;r<=height;r++){
+   const b=textAt(r,'B'),e=textAt(r,'E'),cShow=textAt(r,'C'),fShow=textAt(r,'F');
+   if(b||e||cShow||fShow){financialRows.push({row:r,b,c:n(r),cDisplay:cShow,
+     d:textAt(r,'D'),e,f:n(r,'F'),fDisplay:fShow});}
+   cells['C'+r]=n(r);cells['F'+r]=n(r,'F');
+   labels['B'+r]=b;labels['E'+r]=e;
+ }
+ const filled=[6,7,10,11].filter(r=>n(r)!==null).length;
+ const validation=filled===4?'Datos cargados · pendientes de validación de Finanzas':filled?
+   'Parcial: '+filled+'/4 datos históricos':'Pendiente de diligenciar';
+ return {group:'',company:'',name:cfg.name,sheet:cfg.projection,studentsSheet:cfg.students,
+   cells,labels,financialRows,financeStatus:textAt(2,'F'),financeStatusLabel:textAt(2,'E'),
+   historyDataLoaded:filled>0,validation,unitFee:n(20),
+   initial:n(6),donation2026:n(7),tuitionPaid2026:n(10),admin2026:n(11),
+   cashRecovered:n(16),cash:n(17),cashPotential:null,
+   base:n(24),special:n(25),paidCount:n(26),tuitionBase:n(27),feeBase:n(28),
+   costCall:n(29),donationBase:n(31),donationWithDecember:n(33),
+   finalApproved:n(24,'F'),specialApproved:n(25,'F'),paidEarly:n(26,'F'),
+   authorized:n(27,'F'),feeFinal:n(28,'F'),balanceAfterApproval:n(31,'F'),
+   decemberForecast:n(32),decemberFinal:n(33,'F'),
+   carteraTuition:n(38),carteraBenefits:n(39),carteraRecoverable:n(40),
+   carteraPrevious:n(41),carteraTotal:n(42),carteraCollected:n(44),
+   carteraRecoveredPct:n(45),carteraPending:n(46)};
 }
+
 function mapProjections_(ss,people){
  const groups={},companyGroup={},p=people||[];
  p.forEach(x=>{groups[norm_(x.group)]=x.group;if(norm_(x.company)!==norm_(x.group))companyGroup[norm_(x.company)]=x.group;});
