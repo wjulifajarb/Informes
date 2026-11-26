@@ -19,7 +19,7 @@ const model=ctx.reportModel(rows,[financial],'Residere',{financialV34:{projectio
 const pages=model.pages;
 assert(pages.some(p=>p.title.includes('Caracterización de beneficiarios')&&p.headers[0]==='Dimensión'));
 assert(pages.some(p=>p.title.includes('más valoran del beneficio')&&p.bars.length));
-assert(pages.some(p=>p.title.includes('Embudo de convocatoria')&&p.bars.length===4));
+assert(pages.some(p=>p.title.includes('Embudo de convocatoria')&&p.bars.length===5));
 assert(pages.some(p=>p.title.includes('Novedades de estudiantes antiguos')));
 assert(pages.some(p=>p.kind==='fundSummary'));
 assert(pages.some(p=>p.kind==='comparison'));

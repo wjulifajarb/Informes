@@ -1,37 +1,42 @@
-# Educamás · Informe dinámico 2027-I · versión 5.3.4
+# Educamás 2027-I · reparación de datos y código V5.3.5
 
-**Alcance confirmado — grupo, empresa o global.** Esta entrega corrige exclusivamente el flujo de selección del HTML. No reescribe el Google Sheets, no modifica sus fórmulas ni requiere una nueva publicación de Apps Script si ya funciona V5.3.3.
+## Qué se corrigió directamente en Google Sheets
 
-## Selección de alcance
+En el libro **Base_2027 - I**, ID `1TkVBmU6NOCVpPkSdAUpXeUREAclVdWQnquJNh7y-bZE`, se actualizaron **únicamente** las fórmulas `A3` de las 19 pestañas `Estudiantes-[Empresa]`.
 
-- **Consolidado global:** «Grupo / empresa → Consolidado global · todas las empresas» y pulsar «Confirmar empresa / grupo», o «Restablecer filtros».
-- **Todo un grupo:** elegir, por ejemplo, «Grupo Falic» y dejar «Empresa dentro del grupo → Todo el grupo»; confirmar. Incluye las personas del grupo, pero toma el saldo del fondo principal una sola vez.
-- **Empresa / filial:** elegir el grupo principal y después la empresa concreta; confirmar. El informe, las tablas y las descargas muestran solo esa empresa y su propia proyección.
-- **Empresa independiente:** elegir la empresa en el primer selector; el segundo se deshabilita y no se asigna un grupo artificial.
+Las nuevas fórmulas identifican **Grupo, Empresa y Nombre** mediante los encabezados de `Financiero2027-1` (fila 2), en lugar de suponer que siempre están en F o G. `A1` sigue identificando el grupo o empresa independiente y `B1` la filial cuando la hay. Los datos de origen y sus validaciones no se editaron.
 
-Al cambiar un selector, la vista confirmada **no cambia** hasta pulsar «Confirmar empresa / grupo». Mientras exista una nueva selección sin confirmar, las descargas se deshabilitan. El indicador «Alcance confirmado» deja claro qué empresa o grupo está representado.
+Se compararon los 19 resultados con la fuente: los **208 registros** aparecen en sus siete fondos/grupos principales y cada filial recibe solo sus propios registros. Hay **19 proyecciones** `Proye-` vinculadas a sus pares `Estudiantes-`; las fórmulas financieras C24:C28, F24:F28, C30/F30, C31/F31 y C33/F33 ya compartían el mismo patrón y no requerían cambios. Se conservaron todas las cifras manuales, etiquetas financieras, tarifas y proyecciones.
 
-**Se conserva** la vista de estudiantes, el embudo, la continuidad, las finanzas, los escenarios BI/BU y fee, el porcentaje BL, la cartera, los CSV, PDF/PPTX, los filtros de estado y el estilo responsive. La descarga usa la misma selección confirmada que la plataforma.
+**Respaldo del libro antes de la intervención**: https://docs.google.com/spreadsheets/d/1U1403Va48pxacpY4MfjzKIYiSUHtssfpkfXM7XVm3WU/edit
 
-## Reemplazar
+## Código que SÍ debes reemplazar
 
-| Archivo del ZIP | Destino |
-| --- | --- |
-| `public/index.html` | `public/index.html` del proyecto actual en VS Code/Vercel |
+**`apps-script/Code.gs`**, en el proyecto existente de Google Apps Script vinculado con el informe. Esta nueva versión `5.3.5` lee **Grupo** y **Empresa** por sus encabezados, sin asumir que F/G estén en un orden fijo. El resto de las columnas, privacidad de `Estado interno`, filtros y cálculos BI/BU permanece igual.
 
-**Los demás archivos se incluyen por comodidad, pero no requieren reemplazo** si ya se instaló la V5.3.3: `apps-script/Code.gs`, `api/index.js`, `api/report.js`, `server.js`, `vercel.json`. No sobrescribir `.env.local`.
+1. Abre la implementación **existente** de Google Apps Script.
+2. Copia todo el contenido de este paquete: `apps-script/Code.gs` al archivo `Code.gs` del editor.
+3. Conserva la propiedad privada `API_TOKEN` (no cambies su valor ni lo incluyas en el código).
+4. Ejecuta la función `testConnection()` para comprobar lectura, grupo y proyecciones. La respuesta debe indicar 208 registros (o la cantidad actualizada en la fuente) y 19 proyecciones, sin faltantes.
+5. En **Implementar → Administrar implementaciones → Editar → Nueva versión → Implementar**, actualiza la implementación actual. Si conservas el mismo `/exec`, normalmente no es necesario cambiar `APPS_SCRIPT_URL` en Vercel.
+6. En la plataforma, pulsa **Actualizar**; comprueba global, una empresa independiente (Residere), un grupo completo (Grupo Falic) y una filial (GWS); usa **Confirmar empresa / grupo** y verifica las descargas.
 
-## Verificar
+## Archivos que NO necesitas reemplazar
+
+Si ya funciona la interfaz **V5.3.4**, no necesitas volver a reemplazar `public/index.html`, `api/index.js` ni `api/report.js`. Los incluimos en el ZIP solo para disponer de un proyecto completo consistente. `public/index.html` conserva la misma lógica, solo se actualizó un comentario sobre Grupo y Empresa.
+
+No sobrescribas `.env.local` ni cambies contraseñas o tokens.
+
+## Cómo verificar el código local
 
 ```bash
 npm ci
 npm run check
 npm test
-npm run dev
 ```
 
-Probar las cuatro opciones (global, grupo, filial y empresa independiente) y el comportamiento antes/después de confirmar. Las pruebas locales incluyen escritorio de 1440 px y móvil de 390 px, sin desbordamiento horizontal.
+Las pruebas usan datos simulados para validar **ambos órdenes posibles de las columnas F/G**, además de filtros, empresa independiente, filial, simulador y PDF/PPTX. El resultado de la conexión a la Google Sheets real se verifica con `testConnection()` tras la publicación.
 
-## Limitaciones
+## Datos financieros que aún dependen de diligenciamiento
 
-Esta versión es un archivo listo para publicar, no una publicación en tu Vercel. La verificación de datos conectados se limita a la estructura de la versión previa y las pruebas locales; debes probar un informe real una vez realizado el despliegue.
+Las empresas con BM, BN, BO, BI o BU sin diligenciar pueden mostrar `0` o `Pendiente` en las proyecciones, aunque sus estudiantes sí estén presentes. En particular, hay un registro marcado **Pagado** en Residere cuyo valor final **BU** está vacío. No se inventó ese importe ni se modificó la fuente. Las cifras 2026-II y las tarifas manuales se conservan tal como están.

@@ -180,8 +180,8 @@ async function confirmScope(){
  confirmedGroup=group;confirmedCompany=company;
  scopeData=null;selection.clear();page=0;error('');updateScopeStatus();await sourceForScope();updateScopeStatus();
 }
-// La columna F es el fondo/empresa principal y G la filial, cuando existe.
-// Para una empresa independiente, F corresponde a esa empresa y G permanece vacía.
+// Grupo y Empresa proceden de los encabezados de la hoja financiera, no de posiciones fijas.
+// Una empresa independiente tiene su nombre en Grupo y Empresa derivada como nombre del grupo.
 function belongsToSelection(r,group=currentGroup(),company=currentCompany()){
  return (!group||norm(r.group)===norm(group))&&(!company||norm(r.company)===norm(company));
 }
@@ -221,13 +221,16 @@ function metric(people){
  const enrolled=people.filter(x=>x.registered);
  const old=people.filter(isOld),oldEnrolled=enrolled.filter(isOld),newEnrolled=enrolled.filter(isNew);
  const previous=old.length,continuing=old.filter(x=>x.registered),nonContinuing=old.filter(x=>!x.registered);
- const p=enrolled.filter(x=>x.preapproved),sp=enrolled.filter(x=>x.special),approved=enrolled.filter(x=>x.approved),paid=enrolled.filter(x=>x.paid);
+ // Estado de la convocatoria (E) y aprobación pedagógica (BM) son dos indicadores independientes.
+ const preStatus=enrolled.filter(x=>['pre-aprobado','preaprobado'].includes(norm(x.status)));
+ const preEducation=enrolled.filter(x=>x.preapproved);
+ const sp=enrolled.filter(x=>x.special),approved=enrolled.filter(x=>x.approved),paid=enrolled.filter(x=>x.paid);
  const retired=people.filter(x=>x.retired),grads=people.filter(x=>x.graduated);
  return {total:people.length,registered:enrolled.length,old:previous,new:people.filter(isNew).length,
   oldIn:oldEnrolled.length,newIn:newEnrolled.length,
   emp:enrolled.filter(x=>norm(x.relation).includes('empleado')).length,
   family:enrolled.filter(x=>norm(x.relation).includes('familiar')).length,
-  active:enrolled.filter(x=>x.isActive).length,pre:p.length,special:sp.length,
+  active:enrolled.filter(x=>x.isActive).length,pre:preStatus.length,preEducation:preEducation.length,special:sp.length,
   approved:approved.length,paid:paid.length,retired:retired.length,notInscribed:people.filter(x=>x.notInscribed).length,graduated:grads.length,
   continue:enrolled.length,oldContinue:continuing.length,oldNotContinue:nonContinuing.length,
   oldGrads:old.filter(x=>x.graduated).length,oldRetired:old.filter(x=>x.retired).length,
@@ -269,7 +272,8 @@ function render(){if(!base)return;view=selectSource();
  $('universeNote').textContent=`${number(baseline.registered)} inscritos 2027-I · ${number(baseline.old)} antiguos identificados 2026-II`;
  kpis('summaryKpis',[
   ['Inscritos 2027-I · universo',number(baseline.registered),'Denominador de convocatoria',true],
-  ['Pre aprobado educamás',number(m.pre),percentage(m.pre,baseline.registered)],
+  ['Pre-aprobado',number(m.pre),percentage(m.pre,baseline.registered)],
+  ['Pre aprobado educamás',number(m.preEducation),percentage(m.preEducation,baseline.registered)],
   ['Antiguos inscritos',number(m.oldIn),percentage(m.oldIn,baseline.registered)],
   ['Nuevos inscritos',number(m.newIn),percentage(m.newIn,baseline.registered)],
   ['Empleados inscritos',number(m.emp),percentage(m.emp,baseline.registered)],
@@ -310,12 +314,13 @@ function render(){if(!base)return;view=selectSource();
  table('oldTable',['Estudiante','Empresa / filial','Estado','Motivo / novedad','Situación'],olds.map(x=>[x.name,x.company,x.status,x.caseStatus,x.situation]));
  kpis('funnelKpis',[
   ['Inscritos 2027-I',number(m.registered),percentage(m.registered,baseline.registered),true],
-  ['Pre aprobado educamás',number(m.pre),percentage(m.pre,baseline.registered)],
+  ['Pre-aprobado',number(m.pre),percentage(m.pre,baseline.registered)],
+  ['Pre aprobado educamás',number(m.preEducation),percentage(m.preEducation,baseline.registered)],
   ['Casos especiales',number(m.special),percentage(m.special,baseline.registered)],
   ['Aprobados empresa',number(m.approved),percentage(m.approved,baseline.registered)],
   ['Pagados',number(m.paid),percentage(m.paid,baseline.registered)]
  ]);
- bars('funnelChart',[['Inscritos',m.registered],['Preaprobados',m.pre],['Casos especiales',m.special],['Aprobados empresa',m.approved],['Pagados',m.paid]],10);
+ bars('funnelChart',[['Inscritos',m.registered],['Pre-aprobado',m.pre],['Pre aprobado educamás',m.preEducation],['Casos especiales',m.special],['Aprobados empresa',m.approved],['Pagados',m.paid]],10);
  renderFinance();renderPayments();renderPortfolio();renderSim();renderPeople();}
 function totalComplete(items,key){if(!items.length||items.some(p=>typeof p[key]!=='number'))return null;return items.reduce((a,p)=>a+p[key],0);}
 function financeLabel(source,row,side='B'){
@@ -443,7 +448,7 @@ function exportFinanceCsv(){if(hasPendingScope()){error('Confirma el grupo y la 
 
 function reportRows(rows,unfiltered=rows){const m=metric(rows),all=metric(unfiltered);
  return [['Inscritos 2027-I (universo)',all.registered],
- ['Pre aprobado educamás (en el filtro)',m.pre],
+ ['Pre-aprobado (en el filtro)',m.pre],['Pre aprobado educamás (en el filtro)',m.preEducation],
  ['Antiguos inscritos',m.oldIn],['Porcentaje de antiguos inscritos',percentage(m.oldIn,all.registered)],
  ['Nuevos inscritos',m.newIn],['Porcentaje de nuevos inscritos',percentage(m.newIn,all.registered)],
  ['Empleados inscritos',m.emp],['Familiares inscritos',m.family],
@@ -451,7 +456,7 @@ function reportRows(rows,unfiltered=rows){const m=metric(rows),all=metric(unfilt
  ['Continúan 2027-I desde 2026-II',m.oldContinue],['Tasa de continuidad antiguos',percentage(m.oldContinue,all.old)],
  ['No continúan 2027-I',m.oldNotContinue],['Tasa de no continuidad',percentage(m.oldNotContinue,all.old)],
  ['Graduados 2026-II',m.oldGrads],['Retiros antiguos',m.oldRetired],['Sin inscripción antiguos',m.oldPreReg],
- ['Pre aprobado educamás',m.pre],['Casos especiales',m.special],['Aprobados empresa',m.approved],['Pagados',m.paid]];}
+ ['Pre-aprobado',m.pre],['Pre aprobado educamás',m.preEducation],['Casos especiales',m.special],['Aprobados empresa',m.approved],['Pagados',m.paid]];}
 function reportModel(rows,items,title,sourceData=base,unfiltered=rows,scenarioKeys=new Set()){
  const all=metric(unfiltered),m=metric(rows),enrolled=rows.filter(r=>r.registered),old=rows.filter(isOld);
  const pct=(n,d)=>d?percentage(n,d):'—';
@@ -466,7 +471,8 @@ function reportModel(rows,items,title,sourceData=base,unfiltered=rows,scenarioKe
    ['Inscritos 2027-I',all.registered],['Antiguos inscritos',m.oldIn],['Nuevos inscritos',m.newIn]],
    headers:['Indicador','Estudiantes','% sobre base'],rows:[
    ['Inscritos 2027-I',all.registered,'100 %'],
-   ['Pre aprobado educamás',m.pre,pct(m.pre,all.registered)],
+   ['Pre-aprobado',m.pre,pct(m.pre,all.registered)],
+   ['Pre aprobado educamás',m.preEducation,pct(m.preEducation,all.registered)],
    ['Antiguos inscritos',m.oldIn,pct(m.oldIn,all.registered)],
    ['Nuevos inscritos',m.newIn,pct(m.newIn,all.registered)],
    ['Empleados',m.emp,pct(m.emp,all.registered)],
@@ -497,7 +503,7 @@ function reportModel(rows,items,title,sourceData=base,unfiltered=rows,scenarioKe
    rows:old.filter(r=>!r.registered).map(r=>[r.name,r.company,r.caseStatus||r.situation||r.status])});
  const statusCounts=distribution(rows,r=>r.status).sort((a,b)=>b[1]-a[1]);
  pages.push({title:'Embudo de convocatoria 2027-I · '+scope,section:'03 / CONVOCATORIA',
-   bars:[['Inscritos 2027-I',m.registered],['Pre aprobado educamás',m.pre],['Aprobados empresa',m.approved],['Pagados',m.paid]],
+   bars:[['Inscritos 2027-I',m.registered],['Pre-aprobado',m.pre],['Pre aprobado educamás',m.preEducation],['Aprobados empresa',m.approved],['Pagados',m.paid]],
    headers:['Estado de postulación','Cantidad'],rows:statusCounts});
  pages.push({title:'Novedades de convocatoria · '+scope,section:'03 / CONVOCATORIA',
    headers:['Estudiante','Empresa / filial','Estado de la convocatoria','Motivo'],

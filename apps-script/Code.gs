@@ -5,19 +5,17 @@
  * SOLO LECTURA. Nunca modifica los datos ni las fórmulas del libro.
  * El token permanece en las Propiedades del script: API_TOKEN.
  */
-const API_VERSION = '5.3.3';
+const API_VERSION = '5.3.7';
 const CFG = {
   id:'1TkVBmU6NOCVpPkSdAUpXeUREAclVdWQnquJNh7y-bZE',
   sheet:'Financiero2027-1', period:'2027-1', refresh:60
 };
-const POS = Object.freeze({fund:0,internal:1,created:3,status:4,group:5,company:6,
+const POS = Object.freeze({fund:0,internal:1,created:3,status:4,
   name:7,relationScope:10,type:11,relation:12,age:14,sex:15,doc:17,
   residence:19,motivation:20,requirements:21,guardianRole:28,role:31,
   level:38,university:39,program:40,periods:46,firstGenSource:49,
   approximateTuition:50,abono:55,cesantias:56,prima:57,
-  caseStatus:58,continues:59,financeAmount:60,simulation:61,installments:62,capacityDebt:63,
-  approvalEducation:64,approvalCompany:65,finalStatus:66,paidDate:67,
-  paidInitial:68,discountType:69,discountPct:70,discountValue:71,paidFinal:72});
+  caseStatus:58,continues:59});
 function json_(x){return ContentService.createTextOutput(JSON.stringify(x)).setMimeType(ContentService.MimeType.JSON);}
 function err_(x){return json_({ok:false,error:String(x&&x.message||x).slice(0,500)});}
 function norm_(v){return String(v==null?'':v).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/\s+/g,' ').trim();}
@@ -46,24 +44,48 @@ function doPost(e){try{
   return json_({ok:false,error:'Acción no válida'});
 }catch(e){return err_(e);}}
 function headers_(a){return (a||[]).filter((v,i)=>i!==POS.internal).map(v=>val_(v).replace(/\s+/g,' '));}
-function ensureColumns_(head){const checks={A:'Estado en el fondo',E:'Estado',F:'Empresa',G:'Grupo',H:'Nombre',BI:'Valor a Financiar',BM:'Aprobación EducaMas',BN:'Estado Aprobacion Empresa',BO:'Status Final',BU:'Vr. Final pago matricula'};
-  const loc={A:0,E:4,F:5,G:6,H:7,BI:60,BM:64,BN:65,BO:66,BU:72};
-  const absent=Object.keys(checks).filter(k=>!norm_(head[loc[k]]).includes(norm_(checks[k])));
-  if(absent.length)throw Error('La estructura de Financiero2027-1 cambió. Revisar encabezados: '+absent.join(', '));
+/**
+ * Resuelve los campos críticos POR ENCABEZADO en vez de letras de columna.
+ * La fuente oficial insertó una columna: el antiguo BI/BM/BN/BO/BU se
+ * desplazó a BJ/BN/BO/BP/BV. La validación nunca debe depender del orden.
+ */
+function ensureColumns_(head){
+  const names={
+    fund:'Estado en el fondo',status:'Estado',name:'Nombre',group:'Grupo',company:'Empresa',
+    financeAmount:'Valor a Financiar',simulation:'Simulación Cuota',
+    installments:'Numero de Cuotas',capacityDebt:'Capacidad de endeudamiento',
+    approvalEducation:'Aprobación EducaMas',approvalCompany:'Estado Aprobacion Empresa',
+    finalStatus:'Status Final',paidDate:'Fecha de Pago',
+    paidInitial:'Vr. Inicial pago Matricula (sin descuentos)',
+    discountType:'Tipo de descuento',discountPct:'% de descuento',
+    discountValue:'Vr descuento',paidFinal:'Vr. Final pago matricula'
+  };
+  const required=['fund','status','name','group','company','financeAmount',
+    'approvalEducation','approvalCompany','finalStatus','paidFinal'];
+  const normalized=(head||[]).map(norm_),found={},missing=[];
+  for(const key of Object.keys(names)){
+    const at=normalized.findIndex(h=>h===norm_(names[key]));
+    // Un campo opcional ausente no debe ocasionar una lectura de otra columna.
+    found[key]=at<0?null:at;
+    if(at<0&&required.includes(key))missing.push(names[key]);
+  }
+  if(missing.length)throw Error('Faltan encabezados en '+CFG.sheet+': '+missing.join(', '));
+  if(found.group===found.company)throw Error('Grupo y Empresa no están diferenciados');
+  return found;
 }
 function readPeople_(sh){
   if(!sh)throw Error('No existe la hoja de estudiantes solicitada');
   const main=sh.getName()===CFG.sheet, start=2, last=main?sh.getLastRow():sh.getMaxRows();
-  const count=Math.max(0,last-start+1), width=Math.min(Math.max(sh.getLastColumn(),73),84);
+  const count=Math.max(0,last-start+1), width=Math.min(Math.max(sh.getLastColumn(),75),120);
   if(!count)return {rows:[],allRows:[],headers:[],rawCount:0};
   const grid=sh.getRange(start,1,count,width);
   const raw=grid.getValues(),disp=grid.getDisplayValues(),head=disp[0];
-  ensureColumns_(head);const rows=[],allRows=[],seen={},duplicates=[];
+  const columns=ensureColumns_(head);const rows=[],allRows=[],seen={},duplicates=[];
   for(let i=1;i<raw.length;i++){
     const r=raw[i],d=disp[i],pick=n=>val_(d[n]),n=n=>num_(r[n]);
-    const name=pick(POS.name);if(!name)continue;
-    const group=pick(POS.group),company=pick(POS.company)||group;
-    const fund=pick(POS.fund),status=pick(POS.status),bm=pick(POS.approvalEducation),bn=pick(POS.approvalCompany),bo=pick(POS.finalStatus);
+    const name=pick(columns.name);if(!name)continue;
+    const group=pick(columns.group),company=pick(columns.company)||group;
+    const fund=pick(columns.fund),status=pick(columns.status),bm=pick(columns.approvalEducation),bn=pick(columns.approvalCompany),bo=pick(columns.finalStatus);
     const paid=norm_(bo)==='pagado';
     const approved=['aprobado','aprobacion anticipada'].includes(norm_(bn));
     const preapproved=norm_(bm)==='pre aprobado educamas';
@@ -92,13 +114,13 @@ function readPeople_(sh){
       requirements:pick(POS.requirements),firstGenSource:pick(POS.firstGenSource),
       continues:pick(POS.continues),abono:n(POS.abono),cesantias:n(POS.cesantias),prima:n(POS.prima),
       tuition:n(POS.approximateTuition),tuitionText:pick(POS.approximateTuition),
-      financeAmount:n(POS.financeAmount),simulationCuota:n(POS.simulation),numeroCuotas:n(POS.installments),debtCapacity:n(POS.capacityDebt),approvalEducation:bm,approvalCompany:bn,finalStatus:bo,
-      paidAmount:paid?n(POS.paidFinal):null,paidDate:pick(POS.paidDate),paidInitial:n(POS.paidInitial),
-      paidFinal:n(POS.paidFinal),discountType:pick(POS.discountType),discountPct:n(POS.discountPct),
-      discountValue:n(POS.discountValue),paymentSource:'Financiero2027-1 · BU (valor final matrícula; no prueba de conciliación bancaria)',
+      financeAmount:n(columns.financeAmount),simulationCuota:n(columns.simulation),numeroCuotas:n(columns.installments),debtCapacity:n(columns.capacityDebt),approvalEducation:bm,approvalCompany:bn,finalStatus:bo,
+      paidAmount:paid?n(columns.paidFinal):null,paidDate:pick(columns.paidDate),paidInitial:n(columns.paidInitial),
+      paidFinal:n(columns.paidFinal),discountType:pick(columns.discountType),discountPct:n(columns.discountPct),
+      discountValue:n(columns.discountValue),paymentSource:'Financiero2027-1 · Vr. Final pago matricula (no prueba de conciliación bancaria)',
       paidSupport:'', earlyReference:null,earlyReferenceFlag:bn&&norm_(bn)==='aprobacion anticipada',
-      companyInferred:!pick(POS.company),isActive:active,paid,registered,preapproved,special,approved,retired,graduated,previousBeneficiary,continues2027,notContinuing,situation,formalizedActive:active&&registered,
-      eligible:active&&!paid&&!retired,notInscribed,validTuition:n(POS.financeAmount)!==null,duplicateConflict:false};
+      companyInferred:!pick(columns.company),isActive:active,paid,registered,preapproved,special,approved,retired,graduated,previousBeneficiary,continues2027,notContinuing,situation,formalizedActive:active&&registered,
+      eligible:active&&!paid&&!retired,notInscribed,validTuition:n(columns.financeAmount)!==null,duplicateConflict:false};
     // La columna B / Estado interno JAMÁS sale al navegador ni al CSV.
     allRows.push({row:obj.row,key,group,company,stage,values:d.filter((_,j)=>j!==POS.internal)});
     if(seen[key]){let prev=seen[key],conflict=prev.stage!==obj.stage||prev.financeAmount!==obj.financeAmount;
@@ -169,7 +191,7 @@ function finance_(ss,people){const {items,missing}=mapProjections_(ss,people);
    program:x.program,tuition:x.financeAmount,tuitionReference:x.financeAmount,base:x.preapproved&&!x.paid?x.financeAmount:null,
    review:x.special&&!x.paid?x.financeAmount:null,approval:x.approvalCompany,authorized:x.approved&&!x.paid?x.financeAmount:x.paid?x.paidFinal:null,
    paid:x.paidAmount,paidAmount:x.paidAmount,paidDate:x.paidDate,paidSupport:'',paymentSource:x.paymentSource,
-   note:'Monto BI para pendientes, BU para pagados; datos leídos de Financiero2027-1',sourceRow:x.row,sourceTab:CFG.sheet
+   note:'Monto Valor a Financiar para pendientes y Vr. Final pago matricula para pagados; fuente Financiero2027-1',sourceRow:x.row,sourceTab:CFG.sheet
  }));
  const paidDetail=details.filter(x=>x.paidAmount!==null||x.stage==='Pagado');
  const summary=roots.map(x=>({group:x.group,company:'',sheet:x.sheet,studentsSheet:x.studentsSheet,
@@ -197,7 +219,7 @@ function finance_(ss,people){const {items,missing}=mapProjections_(ss,people);
     notes:'Valores oficiales de '+x.sheet+', sin distribuir saldos grupales.',donations:x.donation2026,
     paidTuition:x.tuitionPaid2026,paidFee:x.admin2026}));
  const legacyCartera=roots.map(x=>({group:x.group,company:'',cells:['2026-II',x.carteraTotal,x.carteraCollected,x.carteraPending],numbers:[x.carteraTotal,x.carteraCollected,x.carteraPending]}));
- const warning='El valor BI se aplica a matrículas pendientes de pago y BU a pagadas en las fórmulas F27. BU es valor final reportado, no certificación bancaria. Los vacíos se muestran como pendientes; no se imputan cifras. Los fondos de grupos y filiales no se suman dos veces.';
+ const warning='El campo Valor a Financiar se aplica a matrículas pendientes y Vr. Final pago matricula a pagadas; este último no certifica conciliación bancaria. Los vacíos se muestran como pendientes; no se imputan cifras. Los fondos de grupos y filiales no se suman dos veces.';
  return {financialV34:{summary,history,companies,quotas:[],detail:details,paidDetail,
     filialProjections:leaves,projections:items,rollup:rollup_(items),missingSheets:missing,missingFilialSheets:missing,
     source:CFG.sheet+' + Estudiantes-[Empresa] + Proye-[Empresa]',warning},
@@ -215,7 +237,7 @@ function getData_(ss){const source=ss.getSheetByName(CFG.sheet);if(!source)throw
 }
 function getScope_(ss,name){const cfg=discover_(ss).find(x=>norm_(x.name)===norm_(name));if(!cfg||!cfg.hasStudents)throw Error('La empresa no tiene hoja Estudiantes-* vinculada');
  const all=readPeople_(ss.getSheetByName(CFG.sheet)).rows;
- // F: empresa/fondo principal; G: filial o vacío si la empresa es independiente.
+ // Grupo/Empresa se obtienen por encabezados, incluso si intercambian columnas.
  const childParents=[...new Set(all.filter(r=>norm_(r.company)===norm_(cfg.name)&&norm_(r.group)!==norm_(cfg.name)).map(r=>r.group))];
  if(childParents.length>1)throw Error('Filial asociada a varios grupos: '+cfg.name);
  const scopeGroup=childParents[0]||cfg.name,scopeCompany=childParents.length?cfg.name:'';

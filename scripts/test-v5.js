@@ -2,7 +2,7 @@
 const fs=require('node:fs'),vm=require('node:vm'),crypto=require('node:crypto'),assert=require('node:assert/strict'),path=require('node:path');
 const fn=(base,options)=>Array.from({length:options},()=>Array(base).fill(''));
 const head=Array(84).fill('');
-Object.assign(head,{0:'Estado en el fondo',1:'Estado interno',4:'Estado',5:'Empresa',6:'Grupo',7:'Nombre',60:'Valor a Financiar',64:'Aprobación EducaMas',65:'Estado Aprobacion Empresa',66:'Status Final',72:'Vr. Final pago matricula'});
+Object.assign(head,{0:'Estado en el fondo',1:'Estado interno',4:'Estado',5:'Grupo',6:'Empresa',7:'Nombre',60:'Valor a Financiar',64:'Aprobación EducaMas',65:'Estado Aprobacion Empresa',66:'Status Final',72:'Vr. Final pago matricula'});
 const make=(name,group,company,bm,bn,bo,bi,bu,status='Inscrito')=>{let r=Array(84).fill('');Object.assign(r,{0:'Activo',1:'ESTADO PRIVADO',4:status,5:group,6:company,7:name,11:'Antiguo',12:'Familiar',28:'Analista',40:'Ingeniería',60:bi,64:bm,65:bn,66:bo,72:bu});return r;};
 const data=[head,
 make('Estudiante A','Filiales Grupo Vigía','Phari SAS (Transportes Vigía)','Pre aprobado educamás','Aprobado','',6000000,''),

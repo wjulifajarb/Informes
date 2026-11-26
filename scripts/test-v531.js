@@ -37,10 +37,11 @@ el('selectNone').onclick();assert.equal(vm.runInContext('selection.size',context
 vm.runInContext('selection.add("pre");selection.add("esp")',context);context.renderSim();
 const complete=context.simulateSelection(context.simCandidates(),new Set(['paid1','paid2','pre','esp']),{fee:null,cash:null});
 assert.equal(complete.tuition,1250);assert.equal(complete.fees,200);assert.equal(complete.total,1450);
-// El Apps Script extrae BL por columna 64 (índice 63), sin editar el libro.
+// El Apps Script debe encontrar la capacidad de endeudamiento por su encabezado,
+// incluso si cambió su posición en la hoja.
 const gs=fs.readFileSync(path.join(root,'apps-script/Code.gs'),'utf8');
-assert(gs.includes('capacityDebt:63'));
-assert(gs.includes('debtCapacity:n(POS.capacityDebt)'));
+assert(gs.includes("capacityDebt:'Capacidad de endeudamiento'"));
+assert(gs.includes('debtCapacity:n(columns.capacityDebt)'));
 assert(/const API_VERSION = '5\.3\.\d+'/.test(gs));
 const api=fs.readFileSync(path.join(root,'api/index.js'),'utf8');assert(api.includes("startsWith('5.3.')"));
 console.log('V5.3.1 OK: preaprobados/casos con checkbox, pagos BI/BU + fee automáticos, BL visible, estados BM BN BO, sin cambios al resto.');

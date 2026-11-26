@@ -2,7 +2,7 @@
 const fs=require('node:fs'),vm=require('node:vm'),crypto=require('node:crypto'),assert=require('node:assert/strict'),path=require('node:path');
 const base=path.resolve(__dirname,'..');
 const code=fs.readFileSync(path.join(base,'apps-script/Code.gs'),'utf8');
-const head=Array(84).fill('');Object.assign(head,{0:'Estado en el fondo',1:'Estado interno',4:'Estado',5:'Empresa',6:'Grupo',7:'Nombre',60:'Valor a Financiar',64:'Aprobación EducaMas',65:'Estado Aprobacion Empresa',66:'Status Final',72:'Vr. Final pago matricula'});
+const head=Array(84).fill('');Object.assign(head,{0:'Estado en el fondo',1:'Estado interno',4:'Estado',5:'Grupo',6:'Empresa',7:'Nombre',60:'Valor a Financiar',64:'Aprobación EducaMas',65:'Estado Aprobacion Empresa',66:'Status Final',72:'Vr. Final pago matricula'});
 const make=(name,st,type='Antiguo',fund='Activo')=>{let r=Array(84).fill('');r[0]=fund;r[1]='NO EXPORTAR SECRETO';r[4]=st;r[5]='Transportes Vigía';r[7]=name;r[11]=type;r[60]=1000000;return r};
 const records=[make('A','Pre-aprobado'),make('B','Inscrito'),make('C','Pagado'),make('D','Graduado · postulación cerrada'),make('E','Retiro de la empresa · postulación cerrada'),make('F','Pre-registro'),make('G','Inscrito','Nuevo'),make('H','Aprobado','Nuevo')];
 const rows=[Array(84).fill(''),head,...records];

@@ -63,7 +63,7 @@ vm.runInContext('api=spyApi;fileBlob=saveFile;',ctx);
   exported=null;await ctx.download('pdf',true);assert.equal(exported,null,'Se exportaron estudiantes ajenos al alcance');
   // Verificación Apps Script con datos de origen F/G para root y filiales.
   const code=fs.readFileSync(path.join(root,'apps-script/Code.gs'),'utf8');
-  const head=Array(84).fill('');Object.assign(head,{0:'Estado en el fondo',1:'Estado interno',4:'Estado',5:'Empresa',6:'Grupo',7:'Nombre',60:'Valor a Financiar',64:'Aprobación EducaMas',65:'Estado Aprobacion Empresa',66:'Status Final',72:'Vr. Final pago matricula'});
+  const head=Array(84).fill('');Object.assign(head,{0:'Estado en el fondo',1:'Estado interno',4:'Estado',5:'Grupo',6:'Empresa',7:'Nombre',60:'Valor a Financiar',64:'Aprobación EducaMas',65:'Estado Aprobacion Empresa',66:'Status Final',72:'Vr. Final pago matricula'});
   const toSource=(p)=>{const r=Array(84).fill('');r[0]='Activo';r[4]=p.status;r[5]=p.group;r[6]=p.group===p.company?'':p.company;r[7]=p.name;r[11]=p.type;r[60]=p.financeAmount;return r;};
   class Sheet{constructor(name,source){this.name=name;this.source=source;}getName(){return this.name}getLastRow(){return this.source.length}getMaxRows(){return this.source.length}getLastColumn(){return this.name.startsWith('Proye-')?6:84}getRange(row,col,n,w){const out=Array.from({length:n},(_,i)=>Array.from({length:w},(_,j)=>this.source[row+i-1]?.[col+j-1]??''));return {getValues:()=>out,getDisplayValues:()=>out.map(r=>r.map(v=>String(v??'')))}}}
   const sourceData=[Array(84).fill(''),head,...people.map(toSource)];const wrongInGws=[sourceData[0],head,toSource(people[0]),toSource(people[1])];
